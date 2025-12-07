@@ -1,0 +1,128 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1 class="page-title">Dashboard</h1>
+  </div>
+
+  <!-- Loading State -->
+  <app-loading-spinner *ngIf="loading" message="Loading dashboard..."></app-loading-spinner>
+
+  <!-- Error State -->
+  <div class="error-message" *ngIf="error && !loading">
+    <p>{{ error }}</p>
+    <button class="btn-retry" (click)="loadDashboardData()">Retry</button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading && !error">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 7V3M16 7V3M7 11H17M5 21H19C20.1046 21 21 20.1046 21 19V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V19C3 20.1046 3.89543 21 5 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Total Events</p>
+          <p class="stat-value">{{ totalEvents }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-green">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Published</p>
+          <p class="stat-value">{{ publishedEvents }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-yellow">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Drafts</p>
+          <p class="stat-value">{{ draftEvents }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-purple">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Completed</p>
+          <p class="stat-value">{{ completedEvents }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="dashboard-grid">
+      <!-- Upcoming Events -->
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2 class="section-title">Upcoming Events</h2>
+          <button class="btn-link" (click)="goToEvents()">View All</button>
+        </div>
+
+        <div class="events-list" *ngIf="upcomingEvents.length > 0">
+          <div class="event-item" *ngFor="let event of upcomingEvents" (click)="viewEvent(event.id!)">
+            <div class="event-date-badge">
+              <div class="date-day">{{ formatDate(event.eventDate).split(' ')[1] }}</div>
+              <div class="date-month">{{ formatDate(event.eventDate).split(' ')[0] }}</div>
+            </div>
+            <div class="event-info">
+              <h4 class="event-name">{{ event.title }}</h4>
+              <p class="event-time">{{ getTimeUntil(event.eventDate) }}</p>
+            </div>
+            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="empty-section" *ngIf="upcomingEvents.length === 0">
+          <p>No upcoming events</p>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="dashboard-section">
+        <div class="section-header">
+          <h2 class="section-title">Recent Activity</h2>
+        </div>
+
+        <div class="events-list" *ngIf="recentEvents.length > 0">
+          <div class="event-item" *ngFor="let event of recentEvents" (click)="viewEvent(event.id!)">
+            <div class="event-status-dot" [ngClass]="{
+              'dot-published': event.status === 'PUBLISHED',
+              'dot-draft': event.status === 'DRAFT',
+              'dot-completed': event.status === 'COMPLETED',
+              'dot-cancelled': event.status === 'CANCELLED'
+            }"></div>
+            <div class="event-info">
+              <h4 class="event-name">{{ event.title }}</h4>
+              <p class="event-meta">{{ event.status }} • {{ formatDate(event.createdAt!) }}</p>
+            </div>
+            <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="empty-section" *ngIf="recentEvents.length === 0">
+          <p>No recent activity</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
