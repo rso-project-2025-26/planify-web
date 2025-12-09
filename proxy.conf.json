@@ -1,0 +1,26 @@
+{
+    "/api/auth": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/events": {
+        "target": "http://localhost:8081",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/guests": {
+        "target": "http://localhost:8081",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/organizations": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    }
+}
