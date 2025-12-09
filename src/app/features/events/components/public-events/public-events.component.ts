@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { EventService } from '../../../../core/services/event.service';
 import { Event, EventStatus, EventType } from '../../../../core/models/event.model';
-import { AuthService } from '../../../../core/services/auth.service';
+import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
   selector: 'app-public-events',
@@ -177,22 +177,17 @@ export class PublicEventsComponent implements OnInit {
    * RSVP to event (requires login)
    */
   rsvpToEvent(event: Event): void {
-    if (!this.isLoggedIn()) {
-      // Show message and redirect to login
-      alert('Please sign in to RSVP to this event');
-      this.router.navigate(['/auth/login']);
-      return;
-    }
-    
-    // For now
-    this.viewEvent(event.id!);
-  }
-
-  /**
-   * Check if user is logged in
-   */
-  isLoggedIn(): boolean {
-    return this.authService.isLoggedIn();
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (!isAuth) {
+        // Show message and redirect to login
+        alert('Please sign in to RSVP to this event');
+        this.router.navigate(['/auth/login']);
+        return;
+      }
+      
+      // For now
+      this.viewEvent(event.id!);
+    });
   }
 
   /**
