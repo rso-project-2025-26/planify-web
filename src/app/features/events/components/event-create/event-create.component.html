@@ -1,0 +1,23 @@
+<div class="create-event-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">Create New Event</h1>
+    <p class="page-subtitle">Fill in the details below to create your event</p>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-alert" *ngIf="error">
+		<span class="material-icons alert-icon">error</span>
+		<span>{{ error }}</span>
+	</div>
+
+  <!-- Event Form Card -->
+  <div class="form-card">
+    <app-event-form
+      mode="create"
+      [loading]="loading"
+      (submitForm)="onFormSubmit($event)"
+      (cancel)="onCancel()">
+    </app-event-form>
+  </div>
+</div>

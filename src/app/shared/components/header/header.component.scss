@@ -25,8 +25,7 @@
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
+  font-size: 32px;
   color: #3b82f6;
 }
 
@@ -76,6 +75,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   transition: all 0.2s;
 }
 
@@ -87,6 +87,8 @@
 
   &:hover {
     background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
   }
 }
 
@@ -99,9 +101,43 @@
   &:hover {
     background: #3b82f6;
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
   }
 }
 
+.btn-create {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: all 0.2s ease-in-out;
+
+  .material-icons {
+    font-size: 20px;
+    vertical-align: middle;
+  }
+
+  &:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+}
 
 .menu-toggle {
   display: none;
@@ -110,11 +146,6 @@
   cursor: pointer;
   padding: 0.5rem;
   color: #1f2937;
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
 
   @media (max-width: 768px) {
     display: block;
