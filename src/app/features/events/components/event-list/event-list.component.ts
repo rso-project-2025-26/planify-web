@@ -5,11 +5,11 @@ import { Event, EventStatus, EventType } from '../../../../core/models/event.mod
 import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
-  selector: 'app-public-events',
-  templateUrl: './public-events.component.html',
-  styleUrls: ['./public-events.component.scss']
+  selector: 'app-event-list',
+  templateUrl: './event-list.component.html',
+  styleUrls: ['./event-list.component.scss']
 })
-export class PublicEventsComponent implements OnInit {
+export class EventListComponent implements OnInit {
   events: Event[] = [];
   filteredEvents: Event[] = [];
   loading = false;

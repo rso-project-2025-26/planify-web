@@ -5,11 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { EventsRoutingModule } from './events-routing.module';
 
 // Components
-import { PublicEventsComponent } from './components/public-events/public-events.component';
+import { EventListComponent } from './components/event-list/event-list.component';
 
 @NgModule({
   declarations: [
-    PublicEventsComponent
+    EventListComponent
   ],
   imports: [
     CommonModule,

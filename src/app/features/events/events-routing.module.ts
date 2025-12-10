@@ -1,15 +1,11 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { PublicEventsComponent } from './components/public-events/public-events.component';
+import { EventListComponent } from './components/event-list/event-list.component';
 
 const routes: Routes = [
   {
-    path: 'public',
-    component: PublicEventsComponent
-  },
-  {
     path: '',
-    component: PublicEventsComponent
+    component: EventListComponent
   }
 ];
 

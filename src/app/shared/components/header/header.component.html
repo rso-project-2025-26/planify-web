@@ -15,8 +15,8 @@
     <nav class="nav-desktop">
       <a 
         class="nav-link" 
-        [class.active]="isActive('/events/public')"
-        (click)="navigateTo('/events/public')">
+        [class.active]="isActive('/events')"
+        (click)="navigateTo('/events')">
         Events
       </a>
       <a 
@@ -57,7 +57,7 @@
   <nav class="nav-mobile" [class.open]="isMenuOpen">
     <a class="nav-link-mobile" (click)="navigateTo('/dashboard')">Dashboard</a>
     <a class="nav-link-mobile" (click)="navigateTo('/events')">My Events</a>
-    <a class="nav-link-mobile" (click)="navigateTo('/public-events')">Public Events</a>
+    <a class="nav-link-mobile" (click)="navigateTo('/events')">Public Events</a>
     <button class="btn-primary-mobile" (click)="navigateTo('/events/create')">
       Create Event
     </button>

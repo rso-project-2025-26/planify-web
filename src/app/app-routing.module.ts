@@ -4,7 +4,7 @@ import { RouterModule, Routes } from "@angular/router";
 const routes: Routes = [
 	{
 		path: "",
-		redirectTo: "/events/public",
+		redirectTo: "/events",
 		pathMatch: "full",
 	},
 	{
@@ -28,7 +28,7 @@ const routes: Routes = [
 	},
 	{
 		path: "**",
-		redirectTo: "/events/public",
+		redirectTo: "/events",
 	},
 ];
 
