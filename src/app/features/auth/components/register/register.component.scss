@@ -4,7 +4,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.4rem;
-  margin-top: 0.5rem;
 
   .form-row.two-columns {
     display: grid;
@@ -23,7 +22,7 @@
   input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: #4f46e5;
+    accent-color: #3b82f6;
     cursor: pointer;
   }
 
@@ -37,7 +36,7 @@
 .info-icon {
   position: relative;
   background: #e5e7eb;
-  color: #4f46e5;
+  color: #3b82f6;
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -110,7 +109,6 @@
   max-width: 700px;
   width: 100%;
   padding: 2.5rem;
-  animation: slideUp 0.4s ease-out;
 }
 
 @keyframes slideUp {
@@ -437,8 +435,8 @@
   }
 
   input:checked~.checkmark {
-    background-color: #4f46e5;
-    border-color: #4f46e5;
+    background-color: #2563eb;
+    border-color: #2563eb;
   }
 
   .checkmark::after {
@@ -479,5 +477,5 @@
 
 /* Hover state */
 .checkbox-styled:hover .checkmark {
-  border-color: #4f46e5;
+  border-color: #2563eb;
 }

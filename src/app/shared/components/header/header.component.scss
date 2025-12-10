@@ -65,29 +65,43 @@
   }
 }
 
+.btn-primary,
+.btn-secondary {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
 .btn-primary {
   background: #3b82f6;
   color: white;
   border: none;
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background 0.2s;
-  font-size: 1rem;
+  margin-right: -1.5rem;
 
   &:hover {
     background: #2563eb;
   }
+}
 
-  .icon {
-    width: 20px;
-    height: 20px;
+.btn-secondary {
+  background: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+  padding: calc(0.625rem - 2px) calc(1.25rem - 2px);
+
+  &:hover {
+    background: #3b82f6;
+    color: white;
   }
 }
+
 
 .menu-toggle {
   display: none;

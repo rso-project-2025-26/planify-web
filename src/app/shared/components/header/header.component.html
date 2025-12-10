@@ -37,7 +37,7 @@
       <button class="btn-primary" *ngIf="(auth.isAuthenticated$ | async) === true" (click)="auth.logout()">
         Logout
       </button>
-      <button class="btn-primary" *ngIf="(auth.isAuthenticated$ | async) === false" (click)="navigateTo('/auth/register')">
+      <button class="btn-secondary" *ngIf="(auth.isAuthenticated$ | async) === false" (click)="navigateTo('/auth/register')">
         Register
       </button>
     </nav>
