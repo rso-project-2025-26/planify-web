@@ -5,6 +5,7 @@ import { GuestService } from '@core/services/guest.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { Event } from '@core/models/event.model';
 import { GuestList } from '@core/models/guest.model';
+import { DialogService } from '@shared/services/dialog.service';
 
 @Component({
   selector: 'app-event-detail',
@@ -25,7 +26,8 @@ export class EventDetailComponent implements OnInit {
     private router: Router,
     private eventService: EventService,
     private guestService: GuestService,
-    private authService: AuthService
+    private authService: AuthService,
+    private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -81,16 +83,24 @@ export class EventDetailComponent implements OnInit {
   }
 
   deleteEvent(): void {
-    if (confirm('Are you sure you want to delete this event?')) {
-      this.eventService.deleteEvent(this.event!.id!).subscribe({
-        next: () => {
-          this.router.navigate(['/dashboard']);
-        },
-        error: (err) => {
-          alert('Failed to delete event');
-        }
-      });
-    }
+    this.dialogService.openConfirmDialog({
+      title: 'Delete Event',
+      message: 'Are you sure you want to delete this event? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      isDangerous: true
+    }).then(confirmed => {
+      if (confirmed) {
+        this.eventService.deleteEvent(this.event!.id!).subscribe({
+          next: () => {
+            this.router.navigate(['/dashboard']);
+          },
+          error: (err) => {
+            alert('Failed to delete event');
+          }
+        });
+      }
+    });
   }
 
   publishEvent(): void {
@@ -102,13 +112,21 @@ export class EventDetailComponent implements OnInit {
   }
 
   cancelEvent(): void {
-    if (confirm('Are you sure you want to cancel this event?')) {
-      this.eventService.cancelEvent(this.event!.id!).subscribe({
-        next: (updated) => {
-          this.event = updated;
-        }
-      });
-    }
+    this.dialogService.openConfirmDialog({
+      title: 'Cancel Event',
+      message: 'Are you sure you want to cancel this event? Guests will be notified.',
+      confirmText: 'Cancel Event',
+      cancelText: 'Keep Event',
+      isDangerous: true
+    }).then(confirmed => {
+      if (confirmed) {
+        this.eventService.cancelEvent(this.event!.id!).subscribe({
+          next: (updated) => {
+            this.event = updated;
+          }
+        });
+      }
+    });
   }
 
   formatDate(dateString: string): string {

@@ -17,7 +17,7 @@
         Back
       </button>
 
-      <div class="header-actions" *ngIf="isOrganizer">
+      <div class="header-actions" *ngIf="true">
         <!-- Edit -->
         <span class="action-item" (click)="editEvent()">
           <span class="material-icons">edit</span>
@@ -30,10 +30,15 @@
           Delete
         </span>
 
-        <!-- Publish (using rocket_launch icon for clarity) -->
+        <!-- Publish -->
         <span class="action-item publish" (click)="publishEvent()" *ngIf="event.status === 'DRAFT'">
           <span class="material-icons">rocket_launch</span>
           Publish
+        </span>
+
+        <span class="action-item cancel" (click)="cancelEvent()" *ngIf="event.status === 'PUBLISHED'">
+          <span class="material-icons">cancel</span>
+          Cancel
         </span>
       </div>
     </div>
@@ -84,7 +89,7 @@
     </div>
 
     <!-- Guest List (only for organizer) -->
-    <div class="guests-card" *ngIf="isOrganizer && guests.length > 0">
+    <div class="guests-card" *ngIf="true">
       <h2>Guest List ({{ guests.length }})</h2>
       
       <div class="guests-list">
