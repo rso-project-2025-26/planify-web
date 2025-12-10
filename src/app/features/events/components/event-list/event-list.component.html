@@ -2,8 +2,12 @@
 
   <!-- Page Header -->
   <div class="page-header">
-    <h1 class="page-title">Public Events</h1>
-    <p class="subtitle">Explore and participate in upcoming activities</p>
+    <h1 class="page-title">
+      {{ eventType === 'public' ? 'Public Events' : eventType === 'my-events' ? 'My Events' : 'All Events' }}
+    </h1>
+    <p class="subtitle">
+      {{ eventType === 'public' ? 'Explore and participate in upcoming activities' : 'Events you organize' }}
+    </p>
   </div>
 
   <!-- Filters Section -->
@@ -65,11 +69,11 @@
 
     <div class="events-grid">
       <div *ngIf="!loading && filteredEvents.length === 0" class="no-events">
-        No public events found.
+        No events found.
       </div>
 
       <!-- Event Card -->
-      <div class="event-card" *ngFor="let event of filteredEvents">
+      <div class="event-card" *ngFor="let event of filteredEvents" (click)="viewEvent(event.id!)">
         <div class="event-icon">
           <svg class="event-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>

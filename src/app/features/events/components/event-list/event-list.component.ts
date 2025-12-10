@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { EventService } from '../../../../core/services/event.service';
 import { Event, EventStatus, EventType } from '../../../../core/models/event.model';
@@ -10,6 +10,9 @@ import { AuthService } from '../../../../auth/auth.service';
   styleUrls: ['./event-list.component.scss']
 })
 export class EventListComponent implements OnInit {
+  @Input() eventType: 'public' | 'my-events' | 'all' = 'public';
+  @Input() organizerId?: number;
+
   events: Event[] = [];
   filteredEvents: Event[] = [];
   loading = false;
@@ -31,17 +34,32 @@ export class EventListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadPublicEvents();
+    this.loadEvents();
   }
 
   /**
    * Load public events from API
    */
-  loadPublicEvents(): void {
+  loadEvents(): void {
     this.loading = true;
     this.error = '';
+    let request$;
     
-    this.eventService.getPublicEvents().subscribe({
+    switch(this.eventType) {
+      case 'public':
+        request$ = this.eventService.getPublicEvents();
+        break;
+      case 'my-events':
+        request$ = this.eventService.getEventsByOrganizer(this.organizerId!);
+        break;
+      case 'all':
+        request$ = this.eventService.getAllEvents();
+        break;
+      default:
+        request$ = this.eventService.getPublicEvents();
+    }
+    
+    request$.subscribe({
       next: (events) => {
         this.events = events;
         this.filteredEvents = events;
@@ -49,7 +67,7 @@ export class EventListComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading public events:', err);
+        console.error('Error loading events:', err);
         this.error = 'Failed to load events. Please try again later.';
         this.loading = false;
       }
