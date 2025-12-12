@@ -73,7 +73,7 @@ export class EventDetailComponent implements OnInit {
 
   checkIfOrganizer(): void {
     if (this.event && this.currentUserId) {
-      this.isOrganizer = this.event.organizerId.toString() === this.currentUserId;
+      this.isOrganizer = this.event.organizerId === this.currentUserId;
     }
   }
 

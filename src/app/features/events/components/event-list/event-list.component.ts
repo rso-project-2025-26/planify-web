@@ -11,7 +11,7 @@ import { AuthService } from '../../../../auth/auth.service';
 })
 export class EventListComponent implements OnInit {
   @Input() eventType: 'public' | 'my-events' | 'all' = 'public';
-  @Input() organizerId?: number;
+  @Input() organizationId?: string;
 
   events: Event[] = [];
   filteredEvents: Event[] = [];
@@ -50,7 +50,7 @@ export class EventListComponent implements OnInit {
         request$ = this.eventService.getPublicEvents();
         break;
       case 'my-events':
-        request$ = this.eventService.getEventsByOrganizer(this.organizerId!);
+        request$ = this.eventService.getEventsByOrganization(this.organizationId!);
         break;
       case 'all':
         request$ = this.eventService.getAllEvents();

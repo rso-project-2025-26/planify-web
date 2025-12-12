@@ -34,8 +34,8 @@ export class EventService {
   }
 
   // Query Operations
-  getEventsByOrganizer(organizerId: number): Observable<Event[]> {
-    return this.apiService.get<Event[]>(`${this.endpoint}/organizer/${organizerId}`);
+  getEventsByOrganization(organizationId: string): Observable<Event[]> {
+    return this.apiService.get<Event[]>(`${this.endpoint}/organization/${organizationId}`);
   }
 
   getEventsByStatus(status: EventStatus): Observable<Event[]> {

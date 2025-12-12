@@ -56,6 +56,14 @@ export class EventFormComponent implements OnInit {
       eventType: [
         this.event?.eventType || 'PRIVATE',
         [Validators.required]
+      ],
+      organizationId: [
+        this.event?.organizationId || '',
+        [Validators.required]
+      ],
+      organizerId: [
+        this.event?.organizerId || '',
+        [Validators.required]
       ]
     });
   }

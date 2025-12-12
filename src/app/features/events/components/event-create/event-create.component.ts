@@ -33,13 +33,14 @@ export class EventCreateComponent {
       // Add organizerId to event data
       const createRequest = {
         ...eventData,
-        organizerId: parseInt(userId)
+        // organizationId?
+        organizerId: userId
       };
 
       // Create event
       this.eventService.createEvent(createRequest).subscribe({
         next: (event) => {
-          // Navigate to the newly created event detail page
+          // Navigate to theevent detail page
           this.router.navigate(['/events', event.id]);
         },
         error: (err) => {
