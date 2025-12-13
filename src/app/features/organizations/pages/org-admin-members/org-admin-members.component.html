@@ -1,0 +1,100 @@
+<app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+<div class="page-container">
+  <h3>Organization Members of </h3>
+
+  <div class="toolbar" *ngIf="organizations.length > 0">
+    <label class="label">{{ organizations[0].name }}</label>
+
+    <button class="btn btn-primary" (click)="openInvite()">Invite user</button>
+  </div>
+
+  <div *ngIf="activeOrg; else noOrg">
+    <!-- Pending Join Requests (collapsible) -->
+    <div class="card" *ngIf="joinRequests.length > 0">
+      <div class="card-header clickable" (click)="joinRequestsCollapsed = !joinRequestsCollapsed">
+        <div class="title">
+          Pending join requests
+          <span class="badge" *ngIf="joinRequestsCollapsed">{{ joinRequests.length }}</span>
+        </div>
+        <div class="chevron" [class.open]="!joinRequestsCollapsed"></div>
+      </div>
+
+      <ng-container *ngIf="!joinRequestsCollapsed">
+        <div class="list-header">
+          <div>User</div>
+          <div>Date</div>
+          <div>Actions</div>
+        </div>
+        <div class="list-row" *ngFor="let r of joinRequests">
+          <div class="user">
+            <div class="email">{{ r.user.username }}</div>
+            <div class="username">ID: {{ r.user.id }}</div>
+          </div>
+          <div class="date">{{ r.createdAt | date:'short' }}</div>
+          <div class="actions">
+            <button class="btn btn-primary" (click)="acceptJoin(r)">Accept</button>
+            <button class="btn btn-danger" (click)="rejectJoin(r)">Reject</button>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="card">
+      <div class="list-header">
+        <div>User</div>
+        <div>Roles</div>
+        <div>Actions</div>
+      </div>
+      <div class="list-row" *ngFor="let m of members">
+        <div class="user">
+            <div class="fullname">{{ m.firstName }} {{ m.lastName }}</div>
+            <div class="username">{{ m.username }}</div>
+        </div>
+        <div class="roles">
+          <label class="role-chip" *ngFor="let r of roles">
+            <input type="checkbox" [checked]="roleSelections[m.userId]?.has(r)" (change)="toggleRole(m, r)" />
+            <span>{{ r }}</span>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary" (click)="saveRoles(m)">Save</button>
+          <span class="success-check" *ngIf="recentlySaved.has(m.userId)">✓</span>
+          <button class="btn btn-danger" (click)="remove(m)">Remove</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noOrg>
+    <p>You are not an admin of any organization yet.</p>
+  </ng-template>
+
+  <!-- Invite Popup -->
+  <div class="modal-backdrop" *ngIf="inviteOpen" (click)="closeInvite()"></div>
+  <div class="modal" *ngIf="inviteOpen">
+    <h2>Invite new users to your organization</h2>
+    <div class="modal-content">
+      <input type="text" placeholder="Search username..." [(ngModel)]="searchUsername" (keyup.enter)="searchUsers()" />
+      <button class="btn btn-primary" (click)="searchUsers()" [disabled]="searching">Search</button>
+    </div>
+    <div class="results">
+      <div *ngFor="let u of userResults" class="result-row">
+        <div class="user">
+          <div class="fullname">{{ u.username }}</div>
+          <div class="username">{{ u.email }}</div>
+        </div>
+          <ng-container [ngSwitch]="getStatus(u)">
+              <span class="status status-ok" *ngSwitchCase="'Already a member'">Already a member</span>
+              <span class="status status-warn" *ngSwitchCase="'Invitation pending'">Invitation pending</span>
+              <span class="status status-warn" *ngSwitchCase="'Join request pending'">Join request pending</span>
+              <button class="btn btn-primary" *ngSwitchDefault (click)="invite(u.username, u.id)" [disabled]="!canInvite(u)">Invite</button>
+          </ng-container>
+      </div>
+      <div *ngIf="!searching && userResults?.length === 0 && searchUsername">No users found.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="closeInvite()">Close</button>
+    </div>
+  </div>
+</div>

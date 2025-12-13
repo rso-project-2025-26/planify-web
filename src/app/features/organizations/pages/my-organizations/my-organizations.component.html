@@ -1,0 +1,94 @@
+<app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+<div class="page-container">
+  <h1>My Organizations</h1>
+
+  <div class="toolbar">
+    <div></div>
+    <button class="btn btn-primary" (click)="openJoin()">Find new organization</button>
+  </div>
+
+  <!-- Pending Invitations (collapsible) -->
+  <div class="card" *ngIf="invitations.length > 0">
+    <div class="card-header clickable" (click)="invitationsCollapsed = !invitationsCollapsed">
+      <div class="title">
+        Pending invitations
+        <span class="badge" *ngIf="invitationsCollapsed">{{ invitations.length }}</span>
+      </div>
+      <div class="chevron" [class.open]="!invitationsCollapsed"></div>
+    </div>
+
+    <ng-container *ngIf="!invitationsCollapsed">
+      <div class="list-header">
+        <div>Organization</div>
+        <div>Date</div>
+        <div>Actions</div>
+      </div>
+      <div class="list-row" *ngFor="let inv of invitations">
+        <div class="org">
+          <div class="name">{{ inv.organization.name }}</div>
+          <div class="slug">{{ inv.organization.slug }}</div>
+        </div>
+        <div class="date">{{ inv.createdAt | date:'short' }}</div>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="acceptInvitation(inv)">Accept</button>
+          <button class="btn btn-danger" (click)="declineInvitation(inv)">Decline</button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- My Organizations -->
+  <div class="card" *ngIf="memberships.length > 0; else empty">
+    <div class="card-header">
+      <div class="title">My Organizations</div>
+    </div>
+    <div class="list-header">
+      <div>Organization</div>
+      <div></div>
+      <div>Actions</div>
+    </div>
+    <div class="list-row" *ngFor="let m of memberships">
+      <div class="org">
+        <div class="name">{{ m.name }}</div>
+        <div class="slug">{{ m.slug }}</div>
+      </div>
+      <div></div>
+      <div class="actions">
+        <button class="btn btn-danger" (click)="leave(m.id, m.name)">Leave</button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #empty>
+    <p>You are not a member of any organization yet.</p>
+  </ng-template>
+
+  <!-- Join Popup -->
+  <div class="modal-backdrop" *ngIf="joinOpen" (click)="closeJoin()"></div>
+  <div class="modal" *ngIf="joinOpen">
+    <h2>Search organizations</h2>
+    <div class="modal-content">
+      <input type="text" placeholder="Search by name or slug..." [(ngModel)]="searchQuery" (keyup.enter)="searchOrgs()" />
+      <button class="btn btn-primary" (click)="searchOrgs()" [disabled]="searching">Search</button>
+    </div>
+    <div class="results">
+      <div *ngFor="let o of orgResults" class="result-row">
+        <div class="org">
+          <div class="name">{{ o.name }}</div>
+          <div class="slug">{{ o.slug }}</div>
+        </div>
+        <ng-container [ngSwitch]="getOrgStatus(o)">
+          <span class="status status-ok" *ngSwitchCase="'Already a member'">Already a member</span>
+          <span class="status status-warn" *ngSwitchCase="'Invitation pending'">Invitation pending</span>
+          <span class="status status-warn" *ngSwitchCase="'Join request pending'">Join request pending</span>
+          <button class="btn btn-primary" *ngSwitchDefault (click)="requestJoin(o)" [disabled]="!canRequestJoin(o)">Request join</button>
+        </ng-container>
+      </div>
+      <div *ngIf="!searching && orgResults?.length === 0 && searchQuery">No organizations found.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="closeJoin()">Close</button>
+    </div>
+  </div>
+</div>

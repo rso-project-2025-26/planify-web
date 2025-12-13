@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { environment } from '@environments/environment';
+import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
   selector: 'app-footer',
@@ -10,4 +11,5 @@ export class FooterComponent {
   currentYear = new Date().getFullYear();
   appName = environment.appName;
   version = environment.version;
+  constructor(public auth: AuthService) {}
 }

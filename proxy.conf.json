@@ -22,5 +22,17 @@
         "secure": false,
         "changeOrigin": true,
         "logLevel": "debug"
+    },
+    "/api/users": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/invitations": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
     }
 }
