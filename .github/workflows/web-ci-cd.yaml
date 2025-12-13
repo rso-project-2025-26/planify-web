@@ -30,7 +30,6 @@ jobs:
     if: >
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature/helm-charts')
-      && !contains(github.event.head_commit.message, '[skip docker]')
     permissions:
       contents: read
       packages: write
