@@ -65,14 +65,12 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
       - run: |
-          # Determine namespace
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             NAMESPACE="planify-main"
           else
             NAMESPACE="planify-dev"
           fi
           
-          # Image tag is the sanitized branch name
           IMAGE_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
 
           helm upgrade --install planify-frontend ./helm/web \
@@ -80,4 +78,4 @@ jobs:
             --set image.tag=${IMAGE_TAG} \
             --create-namespace \
             --wait \
-            --timeout=5m
+            --timeout=10m
