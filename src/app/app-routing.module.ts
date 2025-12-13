@@ -14,13 +14,20 @@ const routes: Routes = [
 				(m) => m.DashboardModule
 			),
 	},
-	{
-		path: "events",
-		loadChildren: () =>
-			import("./features/events/events.module").then(
-				(m) => m.EventsModule
-			),
-	},
+ {
+    path: "events",
+    loadChildren: () =>
+      import("./features/events/events.module").then(
+        (m) => m.EventsModule
+      ),
+  },
+  {
+    path: "organizations",
+    loadChildren: () =>
+      import("./features/organizations/organizations.module").then(
+        (m) => m.OrganizationsModule
+      ),
+  },
 	{
 		path: "auth",
 		loadChildren: () =>

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
+import { map, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -12,7 +13,8 @@ export class HeaderComponent {
 
   constructor(private router: Router,
     public auth: AuthService
-  ) {}
+  ) {
+  }
 
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;
