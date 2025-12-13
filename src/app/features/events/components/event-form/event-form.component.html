@@ -1,0 +1,187 @@
+<form [formGroup]="eventForm" (ngSubmit)="onSubmit()" class="event-form">
+  
+  <!-- Title -->
+  <div class="form-group">
+    <label for="title" class="form-label">
+      Event Title <span class="required">*</span>
+    </label>
+    <input
+      type="text"
+      id="title"
+      formControlName="title"
+      class="form-input"
+      [class.error]="isFieldInvalid('title')"
+      placeholder="e.g., Annual Tech Conference 2025"
+    />
+    <div class="error-message" *ngIf="hasError('title', 'required')">
+      Title is required
+    </div>
+    <div class="error-message" *ngIf="hasError('title', 'minlength')">
+      Title must be at least 3 characters
+    </div>
+    <div class="error-message" *ngIf="hasError('title', 'maxlength')">
+      Title cannot exceed 100 characters
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="form-group">
+    <label for="description" class="form-label">
+      Description
+    </label>
+    <textarea
+      id="description"
+      formControlName="description"
+      class="form-textarea"
+      [class.error]="isFieldInvalid('description')"
+      rows="4"
+      placeholder="Describe your event..."
+    ></textarea>
+    <div class="form-hint">
+      {{ eventForm.get('description')?.value?.length || 0 }} / 2000 characters
+    </div>
+    <div class="error-message" *ngIf="hasError('description', 'maxlength')">
+      Description cannot exceed 2000 characters
+    </div>
+  </div>
+
+  <!-- Date and Time Row -->
+  <div class="form-row">
+    <!-- Event Date -->
+    <div class="form-group">
+      <label for="eventDate" class="form-label">
+        Start Date & Time <span class="required">*</span>
+      </label>
+      <input
+        type="datetime-local"
+        id="eventDate"
+        formControlName="eventDate"
+        class="form-input"
+        [class.error]="isFieldInvalid('eventDate')"
+        [min]="minDate"
+      />
+      <div class="error-message" *ngIf="hasError('eventDate', 'required')">
+        Start date is required
+      </div>
+    </div>
+
+    <!-- End Date -->
+    <div class="form-group">
+      <label for="endDate" class="form-label">
+        End Date & Time
+      </label>
+      <input
+        type="datetime-local"
+        id="endDate"
+        formControlName="endDate"
+        class="form-input"
+        [class.error]="isFieldInvalid('endDate')"
+        [min]="eventForm.get('eventDate')?.value"
+      />
+      <div class="form-hint">Optional</div>
+    </div>
+  </div>
+
+  <!-- Location -->
+  <div class="form-group">
+    <label for="locationName" class="form-label">
+      Location
+    </label>
+    <input
+      type="text"
+      id="locationName"
+      formControlName="locationName"
+      class="form-input"
+      [class.error]="isFieldInvalid('locationName')"
+      placeholder="e.g., Conference Hall A, Ljubljana"
+    />
+    <div class="form-hint">Where will this event take place?</div>
+    <div class="error-message" *ngIf="hasError('locationName', 'maxlength')">
+      Location cannot exceed 500 characters
+    </div>
+  </div>
+
+  <!-- Max Attendees and Event Type Row -->
+  <div class="form-row">
+    <!-- Max Attendees -->
+    <div class="form-group">
+      <label for="maxAttendees" class="form-label">
+        Maximum Attendees
+      </label>
+      <input
+        type="number"
+        id="maxAttendees"
+        formControlName="maxAttendees"
+        class="form-input"
+        [class.error]="isFieldInvalid('maxAttendees')"
+        placeholder="Unlimited"
+        min="1"
+      />
+      <div class="form-hint">Leave empty for unlimited capacity</div>
+      <div class="error-message" *ngIf="hasError('maxAttendees', 'min')">
+        Must be at least 1
+      </div>
+    </div>
+
+    <!-- Event Type -->
+    <div class="form-group">
+      <label class="form-label">
+        Event Type <span class="required">*</span>
+      </label>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input
+            type="radio"
+            formControlName="eventType"
+            value="PRIVATE"
+          />
+          <span class="radio-label">
+            <strong>Private</strong>
+            <small>Only invited guests can view</small>
+          </span>
+        </label>
+        <label class="radio-option">
+          <input
+            type="radio"
+            formControlName="eventType"
+            value="PUBLIC"
+          />
+          <span class="radio-label">
+            <strong>Public</strong>
+            <small>Visible to everyone</small>
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="form-actions">
+    <button
+      type="button"
+      class="btn-cancel"
+      (click)="onCancel()"
+      [disabled]="loading"
+    >
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn-submit"
+      [disabled]="loading"
+      [class.loading]="loading"
+    >
+      <span *ngIf="!loading">
+        {{ mode === 'create' ? 'Create Event' : 'Save Changes' }}
+      </span>
+      <span *ngIf="loading" class="loading-text">
+        <svg class="spinner" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </svg>
+        {{ mode === 'create' ? 'Creating...' : 'Saving...' }}
+      </span>
+    </button>
+  </div>
+
+</form>

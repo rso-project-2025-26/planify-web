@@ -43,9 +43,9 @@ export class AuthService {
 		this.oidc.logoffAndRevokeTokens().subscribe();
 	}
 
-  register(request: RegisterRequest): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(`${this.userServiceUrl}/register`, request);
-  }
+	register(request: RegisterRequest): Observable<RegisterResponse> {
+		return this.http.post<RegisterResponse>(`${this.userServiceUrl}/register`, request);
+	}
 
   hasAnyRole(required: string[]): Observable<boolean> {
     return this.effectiveRoles$.pipe(
@@ -74,4 +74,40 @@ export class AuthService {
     if (Array.isArray(roles)) return roles as string[];
     return [];
   }
+	getCurrentUserId(): Observable<string | null> {
+		return this.user$.pipe(
+			map(result => {
+				if (result && result.userData) {
+					const userData = result.userData as any;
+					return userData.sub || null; // Keycloak user ID
+				}
+				return null;
+			})
+		);
+	}
+
+	getCurrentUsername(): Observable<string | null> {
+		return this.user$.pipe(
+			map(result => {
+				if (result && result.userData) {
+					const userData = result.userData as any;
+					return userData.preferred_username || null;
+				}
+				return null;
+			})
+		);
+	}
+
+	getCurrentUserEmail(): Observable<string | null> {
+		return this.user$.pipe(
+			map(result => {
+				if (result && result.userData) {
+					const userData = result.userData as any;
+					return userData.email || null;
+				}
+				return null;
+			})
+		);
+	}
+
 }
