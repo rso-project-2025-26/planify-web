@@ -27,7 +27,10 @@ jobs:
     name: Build Docker Image
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature/helm-charts')
+    if: >
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature/helm-charts')
+      && !contains(github.event.head_commit.message, '[skip docker]')
     permissions:
       contents: read
       packages: write
@@ -77,5 +80,4 @@ jobs:
             --namespace ${NAMESPACE} \
             --set image.tag=${IMAGE_TAG} \
             --create-namespace \
-            --wait \
-            --timeout=10m
+            --timeout=5m
