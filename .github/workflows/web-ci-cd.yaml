@@ -2,7 +2,7 @@ name: Frontend - CI/CD
 
 on:
   push:
-    branches: [main, dev, feature/helm-charts]
+    branches: [main, dev]
 
 env:
   REGISTRY: ghcr.io
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/feature/helm-charts')
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     permissions:
       contents: read
       packages: write
@@ -55,6 +55,32 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+
+  create-version-tag:
+    name: Create Version Tag
+    needs: build-docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Bump version and push tag
+        id: tag_version
+        uses: anothrNick/github-tag-action@1.67.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+          WITH_V: true
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag_version.outputs.new_tag }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy-to-k8s:
     name: Deploy to Kubernetes
