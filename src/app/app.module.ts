@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import {APP_INITIALIZER, NgModule} from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -23,6 +23,12 @@ import { TokenInterceptor } from './auth/token.interceptor';
     SharedModule
   ],
   providers: [
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (oidc: OidcSecurityService) => () => oidc.checkAuth().toPromise(),
+      deps: [OidcSecurityService],
+      multi: true,
+    },
     { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]

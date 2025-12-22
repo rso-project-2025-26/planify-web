@@ -2,14 +2,14 @@ import {Injectable} from "@angular/core";
 import {RegisterRequest, RegisterResponse} from "@core/models/auth.model";
 import {OidcSecurityService as OidcService} from "angular-auth-oidc-client";
 import {HttpClient} from '@angular/common/http';
-import {combineLatest, Observable} from "rxjs";
-import {map} from "rxjs/operators";
+import {combineLatest, Observable, of} from "rxjs";
+import {map, switchMap} from "rxjs/operators";
 import {environment} from '@environments/environment';
 
 @Injectable({ providedIn: "root" })
 export class AuthService {
 	constructor(private oidc: OidcService, private http: HttpClient) {
-    this.oidc.checkAuth().subscribe();
+    //this.oidc.checkAuth().subscribe();
   }
 	user$ = this.oidc.userData$;
 	isAuthenticated$ = this.oidc.isAuthenticated$.pipe(
@@ -17,16 +17,19 @@ export class AuthService {
   );
   private userServiceUrl = `${environment.userServiceUrl}/auth`;
 
-  roles$ = combineLatest([
-    this.oidc.getAccessToken(),
-    this.isAuthenticated$,
-  ]).pipe(
-    map(([accessToken, isAuth]) => {
-      if (!isAuth) return [] as string[];
-      const payload = this.safeDecodeJwt(accessToken as string | null);
-      return this.extractRealmRoles(payload);
-    }),
-  );
+	roles$ = this.isAuthenticated$.pipe(
+		// Če uporabnik ni prijavljen -> prazen seznam vlog
+		// če je prijavljen -> preberemo token in ga dekodiramo
+		switchMap(isAuth => {
+			if (!isAuth) return of([] as string[]);
+			return this.oidc.getAccessToken().pipe(
+				map((token) => {
+					const payload = this.safeDecodeJwt(token);
+					return this.extractRealmRoles(payload);
+				})
+			);
+		})
+	);
 
   effectiveRoles$ = combineLatest([this.roles$]).pipe(
     map(([tokenRoles]) => {
@@ -53,7 +56,7 @@ export class AuthService {
     );
   }
 
-  private safeDecodeJwt(token: string | null | undefined): any | null {
+  private safeDecodeJwt(token: string): any {
     if (!token) return null;
     const parts = token.split('.');
     if (parts.length !== 3) return null;
