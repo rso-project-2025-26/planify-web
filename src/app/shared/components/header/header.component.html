@@ -77,7 +77,7 @@
     </a>
       <a class="nav-link-mobile" *ngIf="(auth.hasAnyRole(['uporabnik']) | async) === true" (click)="navigateTo('/organizations/my')">My Organizations</a>
       <a class="nav-link-mobile" *ngIf="(auth.hasAnyRole(['org_admin']) | async) === true" (click)="navigateTo('/organizations/admin')">Organization Memberships</a>
-      <button class="btn-primary-mobile" (click)="navigateTo('/events/create')">
+    <button class="btn-primary-mobile" (click)="navigateTo('/events/create')">
       <span class="material-icons">add</span>
       Create Event
     </button>
