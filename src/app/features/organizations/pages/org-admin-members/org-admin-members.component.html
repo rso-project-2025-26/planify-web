@@ -53,7 +53,7 @@
         </div>
         <div class="roles">
           <label class="role-chip" *ngFor="let r of roles">
-            <input type="checkbox" [checked]="roleSelections[m.userId]?.has(r)" (change)="toggleRole(m, r)" />
+            <input type="checkbox" [checked]="roleSelections[m.userId].has(r)" (change)="toggleRole(m, r)" />
             <span>{{ r }}</span>
           </label>
         </div>

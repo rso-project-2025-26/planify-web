@@ -41,6 +41,8 @@
         <span class="material-icons">add</span>
         Create Event
       </button>
+      <!-- Notification Bell -->
+      <app-notification-inbox *ngIf="(auth.isAuthenticated$ | async) === true"></app-notification-inbox>
       <button class="btn-primary" *ngIf="(auth.isAuthenticated$ | async) === false" (click)="auth.login()">
         Login
       </button>
