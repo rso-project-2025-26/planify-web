@@ -46,9 +46,9 @@ export class AuthService {
 		this.oidc.logoffAndRevokeTokens().subscribe();
 	}
 
-	register(request: RegisterRequest): Observable<RegisterResponse> {
-		return this.http.post<RegisterResponse>(`${this.userServiceUrl}/register`, request);
-	}
+  register(request: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${this.userServiceUrl}/register`, request);
+  }
 
   hasAnyRole(required: string[]): Observable<boolean> {
     return this.effectiveRoles$.pipe(
