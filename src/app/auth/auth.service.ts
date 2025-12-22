@@ -77,4 +77,40 @@ export class AuthService {
     if (Array.isArray(roles)) return roles as string[];
     return [];
   }
+	getCurrentUserId(): Observable<string | null> {
+		return this.user$.pipe(
+			map(result => {
+				if (result && result.userData) {
+					const userData = result.userData as any;
+					return userData.sub || null; // Keycloak user ID
+				}
+				return null;
+			})
+		);
+	}
+
+	getCurrentUsername(): Observable<string | null> {
+		return this.user$.pipe(
+			map(result => {
+				if (result && result.userData) {
+					const userData = result.userData as any;
+					return userData.preferred_username || null;
+				}
+				return null;
+			})
+		);
+	}
+
+	getCurrentUserEmail(): Observable<string | null> {
+		return this.user$.pipe(
+			map(result => {
+				if (result && result.userData) {
+					const userData = result.userData as any;
+					return userData.email || null;
+				}
+				return null;
+			})
+		);
+	}
+
 }

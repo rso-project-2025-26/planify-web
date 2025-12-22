@@ -1,9 +1,13 @@
-<div class="public-events-container">
+<div class="event-list-container">
 
   <!-- Page Header -->
   <div class="page-header">
-    <h1 class="page-title">Public Events</h1>
-    <p class="subtitle">Explore and participate in upcoming activities</p>
+    <h1 class="page-title">
+      {{ eventType === 'public' ? 'Public Events' : eventType === 'my-events' ? 'My Events' : 'All Events' }}
+    </h1>
+    <p class="subtitle">
+      {{ eventType === 'public' ? 'Explore and participate in upcoming activities' : 'Events you organize' }}
+    </p>
   </div>
 
   <!-- Filters Section -->
@@ -65,18 +69,11 @@
 
     <div class="events-grid">
       <div *ngIf="!loading && filteredEvents.length === 0" class="no-events">
-        No public events found.
+        No events found.
       </div>
 
       <!-- Event Card -->
-      <div class="event-card" *ngFor="let event of filteredEvents">
-        <div class="event-icon">
-          <svg class="event-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
-        </div>
+      <div class="event-card" *ngFor="let event of filteredEvents" (click)="viewEvent(event.id!)">
         <div class="event-content">
           <div class="event-header">
             <h3 class="event-title">{{ event.title }}</h3>
@@ -85,11 +82,12 @@
 
           <div class="event-meta">
             <span class="meta-item">
-              <i data-lucide="clock"></i>
+              <span class="material-icons">event</span>
               {{ formatShortDate(event.eventDate) }} - {{ formatTime(event.eventDate) }}
             </span>
+
             <span class="meta-item">
-              <i data-lucide="map-pin"></i>
+              <span class="material-icons">location_on</span>
               {{ event.locationName || 'TBD' }}
             </span>
           </div>
@@ -97,10 +95,6 @@
           <p class="event-description">
             {{ event.description }}
           </p>
-
-          <div class="event-actions">
-            <button class="btn-primary" (click)="rsvpToEvent(event)">RSVP</button>
-          </div>
         </div>
       </div>
 

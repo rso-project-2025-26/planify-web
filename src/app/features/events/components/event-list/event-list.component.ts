@@ -1,15 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { EventService } from '../../../../core/services/event.service';
 import { Event, EventStatus, EventType } from '../../../../core/models/event.model';
 import { AuthService } from '../../../../auth/auth.service';
 
 @Component({
-  selector: 'app-public-events',
-  templateUrl: './public-events.component.html',
-  styleUrls: ['./public-events.component.scss']
+  selector: 'app-event-list',
+  templateUrl: './event-list.component.html',
+  styleUrls: ['./event-list.component.scss']
 })
-export class PublicEventsComponent implements OnInit {
+export class EventListComponent implements OnInit {
+  @Input() eventType: 'public' | 'my-events' | 'all' = 'public';
+  @Input() organizationId?: string;
+
   events: Event[] = [];
   filteredEvents: Event[] = [];
   loading = false;
@@ -31,17 +34,32 @@ export class PublicEventsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadPublicEvents();
+    this.loadEvents();
   }
 
   /**
    * Load public events from API
    */
-  loadPublicEvents(): void {
+  loadEvents(): void {
     this.loading = true;
     this.error = '';
+    let request$;
     
-    this.eventService.getPublicEvents().subscribe({
+    switch(this.eventType) {
+      case 'public':
+        request$ = this.eventService.getPublicEvents();
+        break;
+      case 'my-events':
+        request$ = this.eventService.getEventsByOrganization(this.organizationId!);
+        break;
+      case 'all':
+        request$ = this.eventService.getAllEvents();
+        break;
+      default:
+        request$ = this.eventService.getPublicEvents();
+    }
+    
+    request$.subscribe({
       next: (events) => {
         this.events = events;
         this.filteredEvents = events;
@@ -49,7 +67,7 @@ export class PublicEventsComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading public events:', err);
+        console.error('Error loading events:', err);
         this.error = 'Failed to load events. Please try again later.';
         this.loading = false;
       }
@@ -226,6 +244,7 @@ export class PublicEventsComponent implements OnInit {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       month: 'short',
+      year: 'numeric',
       day: 'numeric'
     });
   }

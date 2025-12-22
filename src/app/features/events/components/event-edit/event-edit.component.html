@@ -1,0 +1,43 @@
+<div class="edit-event-container">
+  <!-- Loading State -->
+  <app-loading-spinner *ngIf="loading" message="Loading event..."></app-loading-spinner>
+
+  <!-- Error Loading Event -->
+  <div *ngIf="error && !loading && !event" class="error-state">
+    <svg class="error-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" 
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="loadEvent()">Try Again</button>
+  </div>
+
+  <!-- Edit Form -->
+  <div *ngIf="!loading && event">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">Edit Event</h1>
+      <p class="page-subtitle">Update your event details</p>
+    </div>
+
+    <!-- Error Message (during submit) -->
+    <div class="error-alert" *ngIf="error && !submitting">
+      <svg class="alert-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" 
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Event Form Card -->
+    <div class="form-card">
+      <app-event-form
+        [event]="event"
+        mode="edit"
+        [loading]="submitting"
+        (submitForm)="onFormSubmit($event)"
+        (cancel)="onCancel()">
+      </app-event-form>
+    </div>
+  </div>
+</div>
