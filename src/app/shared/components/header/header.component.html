@@ -10,45 +10,61 @@
     <nav class="nav-desktop">
       <a 
         class="nav-link" 
-        [class.active]="isActive('/events')"
-        (click)="navigateTo('/events')">
+        [class.active]="isActive('/events/public')"
+        (click)="navigateTo('/events/public')">
         Events
       </a>
+      
+      <a 
+        class="nav-link" 
+        *ngIf="(auth.isAuthenticated$ | async) === true"
+        [class.active]="isActive('/events/my-events')"
+        (click)="navigateTo('/events/my-events')">
+        My Events
+      </a>
+      
       <a 
         class="nav-link" 
         [class.active]="isActive('/dashboard')"
         (click)="navigateTo('/dashboard')">
         Dashboard
       </a>
+      
       <a
         class="nav-link"
-        *ngIf="( auth.hasAnyRole(['uporabnik']) | async) === true"
+        *ngIf="(auth.hasAnyRole(['uporabnik']) | async) === true"
         (click)="navigateTo('/organizations/my')"
       >
         My Organizations
       </a>
+      
       <a
         class="nav-link"
-        *ngIf="( auth.hasAnyRole(['org_admin']) | async) === true"
+        *ngIf="(auth.hasAnyRole(['org_admin']) | async) === true"
         (click)="navigateTo('/organizations/admin')"
       >
         Organization Memberships
       </a>
+      
       <button
         class="btn-create"
         (click)="navigateTo('/events/create')"
-        *ngIf="true">
+        *ngIf="(auth.hasAnyRole(['organiser', 'org_admin']) | async) === true">
         <span class="material-icons">add</span>
         Create Event
       </button>
+      
       <!-- Notification Bell -->
       <app-notification-inbox *ngIf="(auth.isAuthenticated$ | async) === true"></app-notification-inbox>
+      
       <button class="btn-primary" *ngIf="(auth.isAuthenticated$ | async) === false" (click)="auth.login()">
         Login
       </button>
+      
       <button class="btn-primary" *ngIf="(auth.isAuthenticated$ | async) === true" (click)="auth.logout()">
         Logout
       </button>
+      
       <button class="btn-secondary" *ngIf="(auth.isAuthenticated$ | async) === false" (click)="navigateTo('/auth/register')">
         Register
       </button>
@@ -67,19 +83,58 @@
       <span class="material-icons">dashboard</span>
       Dashboard
     </a>
-    <a class="nav-link-mobile" (click)="navigateTo('/events')">
+    
+    <a class="nav-link-mobile" (click)="navigateTo('/events/public')">
+      <span class="material-icons">public</span>
+      Events
+    </a>
+    
+    <a 
+      class="nav-link-mobile" 
+      *ngIf="(auth.isAuthenticated$ | async) === true"
+      (click)="navigateTo('/events/my-events')">
       <span class="material-icons">calendar_today</span>
       My Events
     </a>
-    <a class="nav-link-mobile" (click)="navigateTo('/events')">
-      <span class="material-icons">public</span>
-      Public Events
+    
+    <a 
+      class="nav-link-mobile" 
+      *ngIf="(auth.hasAnyRole(['uporabnik']) | async) === true" 
+      (click)="navigateTo('/organizations/my')">
+      <span class="material-icons">business</span>
+      My Organizations
     </a>
-      <a class="nav-link-mobile" *ngIf="(auth.hasAnyRole(['uporabnik']) | async) === true" (click)="navigateTo('/organizations/my')">My Organizations</a>
-      <a class="nav-link-mobile" *ngIf="(auth.hasAnyRole(['org_admin']) | async) === true" (click)="navigateTo('/organizations/admin')">Organization Memberships</a>
-    <button class="btn-primary-mobile" (click)="navigateTo('/events/create')">
+    
+    <a 
+      class="nav-link-mobile" 
+      *ngIf="(auth.hasAnyRole(['org_admin']) | async) === true" 
+      (click)="navigateTo('/organizations/admin')">
+      <span class="material-icons">admin_panel_settings</span>
+      Organization Memberships
+    </a>
+    
+    <button 
+      class="btn-primary-mobile" 
+      *ngIf="(auth.hasAnyRole(['organiser', 'org_admin']) | async) === true"
+      (click)="navigateTo('/events/create')">
       <span class="material-icons">add</span>
       Create Event
+    </button>
+    
+    <button 
+      class="btn-primary-mobile" 
+      *ngIf="(auth.isAuthenticated$ | async) === false"
+      (click)="auth.login()">
+      <span class="material-icons">login</span>
+      Login
+    </button>
+    
+    <button 
+      class="btn-primary-mobile" 
+      *ngIf="(auth.isAuthenticated$ | async) === true"
+      (click)="auth.logout()">
+      <span class="material-icons">logout</span>
+      Logout
     </button>
   </nav>
 </header>

@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { EventService } from '../../../../core/services/event.service';
 import { Event, EventStatus, EventType } from '../../../../core/models/event.model';
 import { AuthService } from '../../../../auth/auth.service';
@@ -10,8 +10,7 @@ import { AuthService } from '../../../../auth/auth.service';
   styleUrls: ['./event-list.component.scss']
 })
 export class EventListComponent implements OnInit {
-  @Input() eventType: 'public' | 'my-events' | 'all' = 'public';
-  @Input() organizationId?: string;
+  eventType: 'public' | 'my-events' = 'public';
 
   events: Event[] = [];
   filteredEvents: Event[] = [];
@@ -30,34 +29,28 @@ export class EventListComponent implements OnInit {
   constructor(
     private eventService: EventService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.loadEvents();
+    // Read route data to determine which type of events to load
+    this.route.data.subscribe(data => {
+      this.eventType = data['eventType'] || 'public';
+      this.loadEvents();
+    });
   }
 
   /**
-   * Load public events from API
+   * Load events based on the event type (public or my-events)
    */
   loadEvents(): void {
     this.loading = true;
     this.error = '';
-    let request$;
     
-    switch(this.eventType) {
-      case 'public':
-        request$ = this.eventService.getPublicEvents();
-        break;
-      case 'my-events':
-        request$ = this.eventService.getEventsByOrganization(this.organizationId!);
-        break;
-      case 'all':
-        request$ = this.eventService.getAllEvents();
-        break;
-      default:
-        request$ = this.eventService.getPublicEvents();
-    }
+    const request$ = this.eventType === 'my-events' 
+      ? this.eventService.getMyEvents()
+      : this.eventService.getPublicEvents();
     
     request$.subscribe({
       next: (events) => {
@@ -199,11 +192,11 @@ export class EventListComponent implements OnInit {
       if (!isAuth) {
         // Show message and redirect to login
         alert('Please sign in to RSVP to this event');
-        this.router.navigate(['/auth/login']);
+        this.authService.login();
         return;
       }
       
-      // For now
+      // For now, navigate to event detail
       this.viewEvent(event.id!);
     });
   }
@@ -219,7 +212,7 @@ export class EventListComponent implements OnInit {
    * Navigate to login
    */
   goToLogin(): void {
-    this.router.navigate(['/auth/login']);
+    this.authService.login();
   }
 
   /**
@@ -277,5 +270,21 @@ export class EventListComponent implements OnInit {
     return event.maxAttendees !== null && 
            event.maxAttendees !== undefined &&
            event.currentAttendees >= event.maxAttendees;
+  }
+
+  /**
+   * Get page title based on event type
+   */
+  getPageTitle(): string {
+    return this.eventType === 'my-events' ? 'My Events' : 'Public Events';
+  }
+
+  /**
+   * Get page subtitle based on event type
+   */
+  getPageSubtitle(): string {
+    return this.eventType === 'my-events' 
+      ? 'Events you are attending or invited to'
+      : 'Explore and participate in upcoming activities';
   }
 }
