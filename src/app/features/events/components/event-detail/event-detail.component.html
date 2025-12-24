@@ -17,7 +17,7 @@
         Back
       </button>
 
-      <div class="header-actions" *ngIf="true">
+      <div class="header-actions" *ngIf="canEdit">
         <!-- Edit -->
         <span class="action-item" (click)="editEvent()">
           <span class="material-icons">edit</span>
@@ -36,9 +36,10 @@
           Publish
         </span>
 
+        <!-- Cancel Event -->
         <span class="action-item delete" (click)="cancelEvent()" *ngIf="event.status === 'PUBLISHED'">
           <span class="material-icons">cancel</span>
-          Cancel
+          Cancel Event
         </span>
       </div>
     </div>
@@ -47,14 +48,31 @@
     <div class="event-info-card">
       <div class="event-header">
         <h1>{{ event.title }}</h1>
-        <span class="status-badge" [ngClass]="{
-          'badge-draft': event.status === 'DRAFT',
-          'badge-published': event.status === 'PUBLISHED',
-          'badge-cancelled': event.status === 'CANCELLED',
-          'badge-completed': event.status === 'COMPLETED'
-        }">
-          {{ event.status }}
-        </span>
+        <div class="header-badges">
+          <span class="status-badge" [ngClass]="{
+            'badge-draft': event.status === 'DRAFT',
+            'badge-published': event.status === 'PUBLISHED',
+            'badge-cancelled': event.status === 'CANCELLED',
+            'badge-completed': event.status === 'COMPLETED'
+          }">
+            {{ event.status }}
+          </span>
+          <span class="type-badge" [ngClass]="{
+            'badge-public': event.eventType === 'PUBLIC',
+            'badge-private': event.eventType === 'PRIVATE'
+          }">
+            {{ event.eventType }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Organization Info -->
+      <div class="organization-info" *ngIf="organization">
+        <span class="material-icons">business</span>
+        <div class="org-details">
+          <span class="org-name">{{ organization.name }}</span>
+          <span class="org-slug">{{ organization.slug }}</span>
+        </div>
       </div>
 
       <div class="event-meta">
@@ -75,11 +93,6 @@
           <span class="material-icons">people</span>
           <span>{{ event.currentAttendees }} / {{ event.maxAttendees || '∞' }} attendees</span>
         </div>
-
-        <!-- Event Type Badge -->
-        <div class="meta-item">
-          <span class="type-badge">{{ event.eventType }}</span>
-        </div>
       </div>
 
       <div class="event-description" *ngIf="event.description">
@@ -88,8 +101,8 @@
       </div>
     </div>
 
-    <!-- Guest List (only for organizer) -->
-    <div class="guests-card" *ngIf="true">
+    <!-- Guest List - TODO: Implement later -->
+    <!-- <div class="guests-card" *ngIf="canEdit && guests.length > 0">
       <h2>Guest List ({{ guests.length }})</h2>
       
       <div class="guests-list">
@@ -107,6 +120,6 @@
           </span>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </div>

@@ -2,9 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EventService } from '@core/services/event.service';
 import { GuestService } from '@core/services/guest.service';
+import { OrganizationService } from '@core/services/organization.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { Event } from '@core/models/event.model';
 import { GuestList } from '@core/models/guest.model';
+import { OrganizationSummary } from '@core/models/organization.model';
 import { DialogService } from '@shared/services/dialog.service';
 
 @Component({
@@ -14,11 +16,12 @@ import { DialogService } from '@shared/services/dialog.service';
 })
 export class EventDetailComponent implements OnInit {
   event?: Event;
+  organization?: OrganizationSummary;
   guests: GuestList[] = [];
   loading = true;
   error = '';
   
-  isOrganizer = false;
+  canEdit = false;
   currentUserId?: string;
 
   constructor(
@@ -26,6 +29,7 @@ export class EventDetailComponent implements OnInit {
     private router: Router,
     private eventService: EventService,
     private guestService: GuestService,
+    private organizationService: OrganizationService,
     private authService: AuthService,
     private dialogService: DialogService
   ) {}
@@ -44,11 +48,11 @@ export class EventDetailComponent implements OnInit {
     this.eventService.getEventById(eventId).subscribe({
       next: (event) => {
         this.event = event;
-        this.checkIfOrganizer();
+        this.loadOrganization();
+        this.checkEditPermissions();
         
         // TODO: Load guests when guest list management is implemented
-        // Guest list requires backend endpoint in event-manager service
-        // if (this.isOrganizer) {
+        // if (this.canEdit) {
         //   this.loadGuests(eventId);
         // }
         
@@ -61,8 +65,46 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  loadOrganization(): void {
+    if (!this.event?.organizationId) return;
+    
+    // Get all user's memberships and find this organization
+    this.organizationService.getMyMemberships().subscribe({
+      next: (orgs) => {
+        this.organization = orgs.find(o => o.id === this.event?.organizationId);
+      },
+      error: (err) => {
+        console.error('Failed to load organization:', err);
+      }
+    });
+  }
+
+  checkEditPermissions(): void {
+    if (!this.event || !this.currentUserId) {
+      this.canEdit = false;
+      return;
+    }
+
+    // User can edit if they are the organizer
+    if (this.event.organizerId === this.currentUserId) {
+      this.canEdit = true;
+      return;
+    }
+
+    this.organizationService.getMyMemberships().subscribe({
+      next: (memberships) => {
+        const membership = memberships.find(m => m.id === this.event?.organizationId);
+        if (membership) {
+          // Check if user has admin privileges
+          this.authService.hasAnyRole(['ORG_ADMIN', 'ORGANISER']).subscribe(hasRole => {
+            this.canEdit = hasRole;
+          });
+        }
+      }
+    });
+  }
+
   // TODO: Implement guest list loading
-  // Will be implemented when we add guest management features
   // loadGuests(eventId: number): void {
   //   this.guestService.getAllGuestsForEvent(eventId).subscribe({
   //     next: (guests) => {
@@ -74,18 +116,15 @@ export class EventDetailComponent implements OnInit {
   //   });
   // }
 
-  checkIfOrganizer(): void {
-    if (this.event && this.currentUserId) {
-      this.isOrganizer = this.event.organizerId === this.currentUserId;
+  editEvent(): void {
+    if (this.canEdit) {
+      this.router.navigate(['/events', this.event!.id, 'edit']);
     }
   }
 
-  // Not yet implemented
-  editEvent(): void {
-    this.router.navigate(['/events', this.event!.id, 'edit']);
-  }
-
   deleteEvent(): void {
+    if (!this.canEdit) return;
+    
     this.dialogService.openConfirmDialog({
       title: 'Delete Event',
       message: 'Are you sure you want to delete this event? This action cannot be undone.',
@@ -96,7 +135,7 @@ export class EventDetailComponent implements OnInit {
       if (confirmed) {
         this.eventService.deleteEvent(this.event!.id!).subscribe({
           next: () => {
-            this.router.navigate(['/dashboard']);
+            this.router.navigate(['/events/public']);
           },
           error: (err) => {
             alert('Failed to delete event');
@@ -107,6 +146,8 @@ export class EventDetailComponent implements OnInit {
   }
 
   publishEvent(): void {
+    if (!this.canEdit) return;
+    
     this.eventService.publishEvent(this.event!.id!).subscribe({
       next: (updated) => {
         this.event = updated;
@@ -115,6 +156,8 @@ export class EventDetailComponent implements OnInit {
   }
 
   cancelEvent(): void {
+    if (!this.canEdit) return;
+    
     this.dialogService.openConfirmDialog({
       title: 'Cancel Event',
       message: 'Are you sure you want to cancel this event? Guests will be notified.',
@@ -146,6 +189,6 @@ export class EventDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/events']);
+    this.router.navigate(['/events/public']);
   }
 }
