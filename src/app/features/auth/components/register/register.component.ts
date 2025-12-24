@@ -266,9 +266,9 @@ export class RegisterComponent implements OnInit {
 			username: this.registerForm.value.username,
 			password: this.registerForm.value.password,
 			mobile: this.registerForm.value.mobile || undefined,
-			role: this.registerForm.value.accountType === "gost" ? "gost" : undefined,
-      		consentSms: this.registerForm.value.consentSms,
-      		consentEmail: this.registerForm.value.consentEmail,
+			role: this.registerForm.value.accountType === "guest" ? "guest" : undefined,
+      consentSms: this.registerForm.value.consentSms,
+      consentEmail: this.registerForm.value.consentEmail,
 		};
 
 		this.authService.register(registerRequest).subscribe({
