@@ -12,9 +12,6 @@ export class TokenInterceptor implements HttpInterceptor {
     // Bypass attaching token for public endpoints (registration, auth, org creation, etc.)
     const publicPaths = [
       '/api/auth/register',
-      '/api/auth/login',
-      '/api/auth/refresh',
-      '/api/organizations',
     ];
 
     const isPublic = publicPaths.some((p) => req.url.startsWith(p));
