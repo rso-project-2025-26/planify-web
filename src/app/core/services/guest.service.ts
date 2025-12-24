@@ -17,8 +17,14 @@ export class GuestService {
     return this.apiService.get<GuestList[]>(`${this.endpoint}/event/${eventId}`);
   }
 
-  getAllEventsForUser(userId: string): Observable<GuestList[]> {
-    return this.apiService.get<GuestList[]>(`${this.endpoint}/user/${userId}`);
+  getMyInvitations(userId: string): Observable<GuestList[]> {
+    const params = new HttpParams().set('userId', userId);
+    return this.apiService.get<GuestList[]>(`${this.endpoint}/my-invitations`, params);
+  }
+
+  getMyAcceptedEvents(userId: string): Observable<GuestList[]> {
+    const params = new HttpParams().set('userId', userId);
+    return this.apiService.get<GuestList[]>(`${this.endpoint}/my-events`, params);
   }
 
   getGuestEntry(eventId: number, userId: string): Observable<GuestList> {

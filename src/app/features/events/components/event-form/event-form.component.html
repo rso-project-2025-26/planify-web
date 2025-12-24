@@ -1,5 +1,69 @@
 <form [formGroup]="eventForm" (ngSubmit)="onSubmit()" class="event-form">
   
+  <!-- Organization -->
+  <div class="form-group" *ngIf="mode === 'create'">
+    <label for="organizationId" class="form-label">
+      Organization <span class="required">*</span>
+    </label>
+    <select
+      id="organizationId"
+      formControlName="organizationId"
+      class="form-input"
+      [class.error]="isFieldInvalid('organizationId')"
+    >
+      <option value="">Select an organization</option>
+      <option *ngFor="let org of organizations" [value]="org.id">
+        {{ org.name }}
+      </option>
+    </select>
+    <div class="form-hint">Which organization is hosting this event?</div>
+    <div class="error-message" *ngIf="hasError('organizationId', 'required')">
+      Organization is required
+    </div>
+  </div>
+
+  <!-- Event Visibility Type -->
+  <div class="form-group" *ngIf="mode === 'create'">
+    <label class="form-label">
+      Event Visibility <span class="required">*</span>
+    </label>
+    <div class="radio-group">
+      <label class="radio-option">
+        <input
+          type="radio"
+          formControlName="eventVisibility"
+          value="PUBLIC"
+        />
+        <span class="radio-label">
+          <strong>Public</strong>
+          <small>Visible to everyone on the platform</small>
+        </span>
+      </label>
+      <label class="radio-option">
+        <input
+          type="radio"
+          formControlName="eventVisibility"
+          value="PUBLIC_WITHIN_ORG"
+        />
+        <span class="radio-label">
+          <strong>Public within Organization</strong>
+          <small>All organization members automatically invited</small>
+        </span>
+      </label>
+      <label class="radio-option">
+        <input
+          type="radio"
+          formControlName="eventVisibility"
+          value="PRIVATE"
+        />
+        <span class="radio-label">
+          <strong>Private</strong>
+          <small>Only manually invited guests can view</small>
+        </span>
+      </label>
+    </div>
+  </div>
+
   <!-- Title -->
   <div class="form-group">
     <label for="title" class="form-label">
@@ -101,57 +165,23 @@
     </div>
   </div>
 
-  <!-- Max Attendees and Event Type Row -->
-  <div class="form-row">
-    <!-- Max Attendees -->
-    <div class="form-group">
-      <label for="maxAttendees" class="form-label">
-        Maximum Attendees
-      </label>
-      <input
-        type="number"
-        id="maxAttendees"
-        formControlName="maxAttendees"
-        class="form-input"
-        [class.error]="isFieldInvalid('maxAttendees')"
-        placeholder="Unlimited"
-        min="1"
-      />
-      <div class="form-hint">Leave empty for unlimited capacity</div>
-      <div class="error-message" *ngIf="hasError('maxAttendees', 'min')">
-        Must be at least 1
-      </div>
-    </div>
-
-    <!-- Event Type -->
-    <div class="form-group">
-      <label class="form-label">
-        Event Type <span class="required">*</span>
-      </label>
-      <div class="radio-group">
-        <label class="radio-option">
-          <input
-            type="radio"
-            formControlName="eventType"
-            value="PRIVATE"
-          />
-          <span class="radio-label">
-            <strong>Private</strong>
-            <small>Only invited guests can view</small>
-          </span>
-        </label>
-        <label class="radio-option">
-          <input
-            type="radio"
-            formControlName="eventType"
-            value="PUBLIC"
-          />
-          <span class="radio-label">
-            <strong>Public</strong>
-            <small>Visible to everyone</small>
-          </span>
-        </label>
-      </div>
+  <!-- Max Attendees -->
+  <div class="form-group">
+    <label for="maxAttendees" class="form-label">
+      Maximum Attendees
+    </label>
+    <input
+      type="number"
+      id="maxAttendees"
+      formControlName="maxAttendees"
+      class="form-input"
+      [class.error]="isFieldInvalid('maxAttendees')"
+      placeholder="Unlimited"
+      min="1"
+    />
+    <div class="form-hint">Leave empty for unlimited capacity</div>
+    <div class="error-message" *ngIf="hasError('maxAttendees', 'min')">
+      Must be at least 1
     </div>
   </div>
 

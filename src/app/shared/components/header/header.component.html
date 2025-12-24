@@ -34,6 +34,7 @@
       <a
         class="nav-link"
         *ngIf="(auth.hasAnyRole(['uporabnik']) | async) === true"
+        [class.active]="isActive('/organizations/my')"
         (click)="navigateTo('/organizations/my')"
       >
         My Organizations
@@ -42,11 +43,15 @@
       <a
         class="nav-link"
         *ngIf="(auth.hasAnyRole(['org_admin']) | async) === true"
+        [class.active]="isActive('/organizations/admin')"
         (click)="navigateTo('/organizations/admin')"
       >
         Organization Memberships
       </a>
       
+      <!-- Notification Bell -->
+      <app-notification-inbox *ngIf="(auth.isAuthenticated$ | async) === true"></app-notification-inbox>
+
       <button
         class="btn-create"
         (click)="navigateTo('/events/create')"
@@ -54,9 +59,6 @@
         <span class="material-icons">add</span>
         Create Event
       </button>
-      
-      <!-- Notification Bell -->
-      <app-notification-inbox *ngIf="(auth.isAuthenticated$ | async) === true"></app-notification-inbox>
       
       <button class="btn-primary" *ngIf="(auth.isAuthenticated$ | async) === false" (click)="auth.login()">
         Login

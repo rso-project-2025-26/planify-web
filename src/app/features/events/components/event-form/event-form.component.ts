@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Event } from '@core/models/event.model';
+import { OrganizationSummary } from '@core/models/organization.model';
 
 @Component({
   selector: 'app-event-form',
@@ -8,9 +9,10 @@ import { Event } from '@core/models/event.model';
   styleUrls: ['./event-form.component.scss']
 })
 export class EventFormComponent implements OnInit {
-  @Input() event?: Event;  // For editing existing event
+  @Input() event?: Event;
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() loading = false;
+  @Input() organizations: OrganizationSummary[] = [];
   
   @Output() submitForm = new EventEmitter<any>();
   @Output() cancel = new EventEmitter<void>();
@@ -19,7 +21,6 @@ export class EventFormComponent implements OnInit {
   minDate: string;
 
   constructor(private fb: FormBuilder) {
-    // Set minimum date to today
     const today = new Date();
     this.minDate = today.toISOString().slice(0, 16);
   }
@@ -53,16 +54,12 @@ export class EventFormComponent implements OnInit {
         this.event?.maxAttendees || null,
         [Validators.min(1)]
       ],
-      eventType: [
-        this.event?.eventType || 'PRIVATE',
-        [Validators.required]
-      ],
       organizationId: [
         this.event?.organizationId || '',
         [Validators.required]
       ],
-      organizerId: [
-        this.event?.organizerId || '',
+      eventVisibility: [
+        'PRIVATE',
         [Validators.required]
       ]
     });
@@ -90,7 +87,6 @@ export class EventFormComponent implements OnInit {
       
       this.submitForm.emit(eventData);
     } else {
-      // Mark all fields as touched to show validation errors
       Object.keys(this.eventForm.controls).forEach(key => {
         this.eventForm.get(key)?.markAsTouched();
       });
@@ -101,7 +97,6 @@ export class EventFormComponent implements OnInit {
     this.cancel.emit();
   }
 
-  // Validation helper methods
   hasError(fieldName: string, errorType: string): boolean {
     const field = this.eventForm.get(fieldName);
     return !!(field && field.hasError(errorType) && (field.dirty || field.touched));

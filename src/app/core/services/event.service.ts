@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Observable, combineLatest, of } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { Observable, forkJoin, combineLatest, of } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { Event, EventStatus, CreateEventRequest, UpdateEventRequest } from '@core/models/event.model';
-import { AuthService } from '@auth/auth.service';
 import { GuestService } from './guest.service';
+import { AuthService } from '../../auth/auth.service';
+import { Event, EventStatus, CreateEventRequest, UpdateEventRequest } from '@core/models/event.model';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -15,8 +15,8 @@ export class EventService {
 
   constructor(
     private apiService: ApiService,
-    private authService: AuthService,
-    private guestService: GuestService
+    private guestService: GuestService,
+    private authService: AuthService
   ) {}
 
   // CRUD Operations
@@ -61,69 +61,57 @@ export class EventService {
     return this.apiService.get<Event[]>(`${this.endpoint}/past`);
   }
 
+  // Get My Events (Public + Invited/Accepted)
   getMyEvents(): Observable<Event[]> {
+    console.log()
     return this.authService.getCurrentUserId().pipe(
       switchMap(userId => {
         if (!userId) {
-          return of([]);
+          return this.getPublicEvents();
         }
-
-        // Get all events user is invited to (from guest service)
-        return this.guestService.getAllEventsForUser(userId).pipe(
-          switchMap(guestEntries => {
-            // Extract event IDs from guest list entries
-            const eventIds = guestEntries
-              .filter(entry => entry.rsvpStatus === 'ACCEPTED' || entry.checkedIn)
-              .map(entry => entry.eventId);
-
-            if (eventIds.length === 0) {
-              // User has no events, just return public events
-              return this.getPublicEvents();
+        
+        return combineLatest([
+          this.getPublicEvents(),
+          this.guestService.getMyAcceptedEvents(userId)
+        ]).pipe(
+          switchMap(([publicEvents, invitations]) => {
+            // Get event IDs from invitations
+            const invitedEventIds = invitations.map(inv => inv.eventId);
+            
+            // Fetch full event details for invited events
+            if (invitedEventIds.length === 0) {
+              return of(publicEvents);
             }
-
-            // Fetch all events by their IDs
-            const eventRequests = eventIds.map(id => 
+            
+            const eventRequests = invitedEventIds.map(id => 
               this.getEventById(id).pipe(
                 catchError(err => {
-                  console.error(`Failed to load event ${id}:`, err);
+                  console.error(`Failed to fetch event ${id}:`, err);
                   return of(null);
                 })
               )
             );
-
-            return combineLatest([
-              this.getPublicEvents(),
-              combineLatest(eventRequests)
-            ]).pipe(
-              map(([publicEvents, myPrivateEvents]) => {
-                // Filter out null values and duplicates
-                const validPrivateEvents = myPrivateEvents.filter(e => e !== null) as Event[];
-                
-                // Create a map to avoid duplicates (event might be both public and user is invited)
-                const eventMap = new Map<number, Event>();
-                
-                // Add public events first
-                publicEvents.forEach(event => {
-                  if (event.id) eventMap.set(event.id, event);
-                });
-                
-                // Add private events user is invited to
-                validPrivateEvents.forEach(event => {
-                  if (event.id) eventMap.set(event.id, event);
-                });
-                
-                // Return unique events, sorted by date
-                return Array.from(eventMap.values())
-                  .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+            
+            return forkJoin(eventRequests).pipe(
+              map(invitedEvents => {
+                const validEvents = invitedEvents.filter(e => e !== null) as Event[];
+                // Combine and remove duplicates
+                const allEvents = [...publicEvents, ...validEvents];
+                const uniqueEvents = Array.from(
+                  new Map(allEvents.map(e => [e.id, e])).values()
+                );
+                // Sort by date
+                return uniqueEvents.sort((a, b) => 
+                  new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+                );
               })
             );
-          }),
-          catchError(err => {
-            console.error('Failed to load my events:', err);
-            // Fallback to public events only
-            return this.getPublicEvents();
           })
         );
+      }),
+      catchError(err => {
+        console.error('Failed to load my events:', err);
+        return this.getPublicEvents();
       })
     );
   }

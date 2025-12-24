@@ -82,7 +82,7 @@
                   <label class="role-chip" *ngFor="let role of roles">
                     <input 
                       type="checkbox" 
-                      [checked]="roleSelections[member.userId]?.has(role)" 
+                      [checked]="roleSelections[member.userId].has(role)" 
                       (change)="toggleRole(member, role)"
                     />
                     <span>{{ role }}</span>

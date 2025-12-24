@@ -46,10 +46,11 @@ export class EventDetailComponent implements OnInit {
         this.event = event;
         this.checkIfOrganizer();
         
-        // Load guests if organizer
-        if (this.isOrganizer) {
-          this.loadGuests(eventId);
-        }
+        // TODO: Load guests when guest list management is implemented
+        // Guest list requires backend endpoint in event-manager service
+        // if (this.isOrganizer) {
+        //   this.loadGuests(eventId);
+        // }
         
         this.loading = false;
       },
@@ -60,16 +61,18 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  loadGuests(eventId: number): void {
-    this.guestService.getAllGuestsForEvent(eventId).subscribe({
-      next: (guests) => {
-        this.guests = guests;
-      },
-      error: (err) => {
-        console.error('Failed to load guests:', err);
-      }
-    });
-  }
+  // TODO: Implement guest list loading
+  // Will be implemented when we add guest management features
+  // loadGuests(eventId: number): void {
+  //   this.guestService.getAllGuestsForEvent(eventId).subscribe({
+  //     next: (guests) => {
+  //       this.guests = guests;
+  //     },
+  //     error: (err) => {
+  //       console.error('Failed to load guests:', err);
+  //     }
+  //   });
+  // }
 
   checkIfOrganizer(): void {
     if (this.event && this.currentUserId) {
