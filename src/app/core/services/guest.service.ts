@@ -17,30 +17,30 @@ export class GuestService {
     return this.apiService.get<GuestList[]>(`${this.endpoint}/event/${eventId}`);
   }
 
-  getAllEventsForUser(userId: number): Observable<GuestList[]> {
+  getAllEventsForUser(userId: string): Observable<GuestList[]> {
     return this.apiService.get<GuestList[]>(`${this.endpoint}/user/${userId}`);
   }
 
-  getGuestEntry(eventId: number, userId: number): Observable<GuestList> {
+  getGuestEntry(eventId: number, userId: string): Observable<GuestList> {
     return this.apiService.get<GuestList>(`${this.endpoint}/event/${eventId}/user/${userId}`);
   }
 
   inviteGuest(request: InviteGuestRequest): Observable<GuestList> {
     const params = new HttpParams()
       .set('eventId', request.eventId.toString())
-      .set('userId', request.userId.toString())
+      .set('userId', request.userId)
       .set('role', request.role || GuestRole.ATTENDEE)
       .set('notes', request.notes || '');
     
     return this.apiService.post<GuestList>(`${this.endpoint}/invite`, null);
   }
 
-  removeGuest(eventId: number, userId: number): Observable<void> {
+  removeGuest(eventId: number, userId: string): Observable<void> {
     return this.apiService.delete<void>(`${this.endpoint}/event/${eventId}/user/${userId}`);
   }
 
   // RSVP Management
-  updateRsvp(eventId: number, userId: number, status: RsvpStatus): Observable<GuestList> {
+  updateRsvp(eventId: number, userId: string, status: RsvpStatus): Observable<GuestList> {
     const params = new HttpParams().set('status', status);
     return this.apiService.put<GuestList>(
       `${this.endpoint}/event/${eventId}/user/${userId}/rsvp`,
@@ -48,14 +48,14 @@ export class GuestService {
     );
   }
 
-  acceptInvitation(eventId: number, userId: number): Observable<GuestList> {
+  acceptInvitation(eventId: number, userId: string): Observable<GuestList> {
     return this.apiService.put<GuestList>(
       `${this.endpoint}/event/${eventId}/user/${userId}/accept`,
       {}
     );
   }
 
-  declineInvitation(eventId: number, userId: number): Observable<GuestList> {
+  declineInvitation(eventId: number, userId: string): Observable<GuestList> {
     return this.apiService.put<GuestList>(
       `${this.endpoint}/event/${eventId}/user/${userId}/decline`,
       {}
@@ -63,7 +63,7 @@ export class GuestService {
   }
 
   // Check-in Management
-  checkInGuest(eventId: number, userId: number): Observable<GuestList> {
+  checkInGuest(eventId: number, userId: string): Observable<GuestList> {
     return this.apiService.put<GuestList>(
       `${this.endpoint}/event/${eventId}/user/${userId}/check-in`,
       {}

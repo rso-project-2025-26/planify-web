@@ -18,7 +18,8 @@ export interface Event {
   endDate?: string;
   locationId?: number;
   locationName?: string;
-  organizerId: number;
+  organizationId: string;
+  organizerId: string;
   maxAttendees?: number;
   currentAttendees: number;
   eventType: EventType;
@@ -34,7 +35,8 @@ export interface CreateEventRequest {
   endDate?: string;
   locationId?: number;
   locationName?: string;
-  organizerId: number;
+  organizationId: string;
+  organizerId: string;
   maxAttendees?: number;
   eventType: EventType;
 }

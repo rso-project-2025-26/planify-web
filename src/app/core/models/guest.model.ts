@@ -15,7 +15,7 @@ export enum GuestRole {
 export interface GuestList {
   id?: number;
   eventId: number;
-  userId: number;
+  userId: string;
   rsvpStatus: RsvpStatus;
   role: GuestRole;
   invitedAt?: string;
@@ -27,7 +27,7 @@ export interface GuestList {
 
 export interface InviteGuestRequest {
   eventId: number;
-  userId: number;
+  userId: string;
   role?: GuestRole;
   notes?: string;
 }

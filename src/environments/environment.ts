@@ -7,6 +7,11 @@ export const environment = {
 	// User Service
 	userServiceUrl: "/api",
 
+	// Notification Service
+	notificationServiceUrl: "/api",
+	notificationWebSocketUrl: "ws://localhost:8083/ws/notifications",
+	enableWebSocketNotifications: true, // Set to true when notification service is running
+
 	// Keycloak Configuration
 	keycloakUrl: "http://localhost:9080",
 	keycloakRealm: "planify",
