@@ -54,14 +54,16 @@ export class EventListComponent implements OnInit {
     
     request$.subscribe({
       next: (events) => {
-        this.events = events;
-        this.filteredEvents = events;
+        this.events = events || [];
+        this.filteredEvents = events || [];
         this.extractUniqueLocations();
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading events:', err);
         this.error = 'Failed to load events. Please try again later.';
+        this.events = [];
+        this.filteredEvents = [];
         this.loading = false;
       }
     });
@@ -71,6 +73,10 @@ export class EventListComponent implements OnInit {
    * Extract unique locations for filter dropdown
    */
   extractUniqueLocations(): void {
+    if (!this.events || this.events.length === 0) {
+      this.uniqueLocations = [];
+      return;
+    }
     const locations = this.events
       .map(e => e.locationName)
       .filter((loc): loc is string => !!loc);
