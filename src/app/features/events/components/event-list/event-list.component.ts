@@ -180,7 +180,7 @@ export class EventListComponent implements OnInit {
   /**
    * View event details
    */
-  viewEvent(eventId: number): void {
+  viewEvent(eventId: string): void {
     this.router.navigate(['/events', eventId]);
   }
 

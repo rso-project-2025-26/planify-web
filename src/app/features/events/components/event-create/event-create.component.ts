@@ -7,7 +7,6 @@ import { AuthService } from '../../../../auth/auth.service';
 import { OrganizationService } from '@core/services/organization.service';
 import { GuestService } from '@core/services/guest.service';
 import { OrganizationSummary } from '@core/models/organization.model';
-import { GuestRole } from '@core/models/guest.model';
 import { EventType } from '@core/models/event.model';
 
 @Component({
@@ -87,7 +86,7 @@ export class EventCreateComponent implements OnInit {
               throw new Error('Created event missing ID');
             }
 
-            // Auto-invite all org members
+            // If PUBLIC_WITHIN_ORG, auto-invite all org members
             if (visibility === 'PUBLIC_WITHIN_ORG') {
               return this.organizationService.getMembers(eventData.organizationId).pipe(
                 switchMap(members => {
@@ -98,11 +97,11 @@ export class EventCreateComponent implements OnInit {
                       this.guestService.inviteGuest({
                         eventId: createdEvent.id!,
                         userId: member.userId,
-                        role: GuestRole.ATTENDEE
+                        organizationId: eventData.organizationId
                       }).pipe(
                         catchError(err => {
                           console.error(`Failed to invite user ${member.userId}:`, err);
-                          return of(null);
+                          return of(null); // Continue even if one invite fails
                         })
                       )
                     );
@@ -118,6 +117,7 @@ export class EventCreateComponent implements OnInit {
                 }),
                 catchError(err => {
                   console.error('Failed to load org members for auto-invite:', err);
+                  // Still return the event, just log the error
                   return of(createdEvent);
                 })
               );

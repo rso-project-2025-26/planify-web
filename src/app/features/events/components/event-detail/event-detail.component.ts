@@ -35,7 +35,7 @@ export class EventDetailComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const eventId = +this.route.snapshot.paramMap.get('id')!;
+    const eventId = this.route.snapshot.paramMap.get('id')!;
     
     // Get current user ID
     this.authService.getCurrentUserId().subscribe(userId => {
@@ -44,7 +44,7 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  loadEventDetails(eventId: number): void {
+  loadEventDetails(eventId: string): void {
     this.eventService.getEventById(eventId).subscribe({
       next: (event) => {
         this.event = event;
@@ -91,11 +91,13 @@ export class EventDetailComponent implements OnInit {
       return;
     }
 
+    // Or if they have ORG_ADMIN or ORGANISER role in the event's organization
     this.organizationService.getMyMemberships().subscribe({
       next: (memberships) => {
         const membership = memberships.find(m => m.id === this.event?.organizationId);
         if (membership) {
           // Check if user has admin privileges
+          // This assumes membership has roles property - adjust based on your model
           this.authService.hasAnyRole(['ORG_ADMIN', 'ORGANISER']).subscribe(hasRole => {
             this.canEdit = hasRole;
           });

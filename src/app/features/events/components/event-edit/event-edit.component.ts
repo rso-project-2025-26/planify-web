@@ -11,7 +11,7 @@ import { Event } from '@core/models/event.model';
   styleUrls: ['./event-edit.component.scss']
 })
 export class EventEditComponent implements OnInit {
-  eventId!: number;
+  eventId!: string;
   event?: Event;
   loading = true;
   error = '';
@@ -27,7 +27,7 @@ export class EventEditComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.eventId = +this.route.snapshot.paramMap.get('id')!;
+    this.eventId = this.route.snapshot.paramMap.get('id')!;
     this.loadEvent();
   }
 
@@ -63,7 +63,7 @@ export class EventEditComponent implements OnInit {
         return;
       }
 
-      // Or if they have appropriate role in the event's organization
+      // Or if they have ORG_ADMIN or ORGANISER role in the event's organization
       this.organizationService.getMyMemberships().subscribe({
         next: (memberships) => {
           const membership = memberships.find(m => m.id === this.event?.organizationId);

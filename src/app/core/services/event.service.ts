@@ -24,7 +24,7 @@ export class EventService {
     return this.apiService.get<Event[]>(this.endpoint);
   }
 
-  getEventById(id: number): Observable<Event> {
+  getEventById(id: string): Observable<Event> {
     return this.apiService.get<Event>(`${this.endpoint}/${id}`);
   }
 
@@ -32,11 +32,11 @@ export class EventService {
     return this.apiService.post<Event>(this.endpoint, event);
   }
 
-  updateEvent(id: number, event: UpdateEventRequest): Observable<Event> {
+  updateEvent(id: string, event: UpdateEventRequest): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}`, event);
   }
 
-  deleteEvent(id: number): Observable<void> {
+  deleteEvent(id: string): Observable<void> {
     return this.apiService.delete<void>(`${this.endpoint}/${id}`);
   }
 
@@ -63,7 +63,6 @@ export class EventService {
 
   // Get My Events (Public + Invited/Accepted)
   getMyEvents(): Observable<Event[]> {
-    console.log()
     return this.authService.getCurrentUserId().pipe(
       switchMap(userId => {
         if (!userId) {
@@ -117,15 +116,15 @@ export class EventService {
   }
 
   // Status Management
-  publishEvent(id: number): Observable<Event> {
+  publishEvent(id: string): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/publish`, {});
   }
 
-  cancelEvent(id: number): Observable<Event> {
+  cancelEvent(id: string): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/cancel`, {});
   }
 
-  completeEvent(id: number): Observable<Event> {
+  completeEvent(id: string): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/complete`, {});
   }
 }
