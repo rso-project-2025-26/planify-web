@@ -72,6 +72,7 @@ export class EventCreateComponent implements OnInit {
           description: eventData.description,
           eventDate: eventData.eventDate,
           endDate: eventData.endDate,
+          locationId: eventData.locationId,
           locationName: eventData.locationName,
           maxAttendees: eventData.maxAttendees,
           organizationId: eventData.organizationId,

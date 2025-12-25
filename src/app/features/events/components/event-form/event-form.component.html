@@ -147,22 +147,44 @@
   </div>
 
   <!-- Location -->
-  <div class="form-group">
-    <label for="locationName" class="form-label">
-      Location
-    </label>
-    <input
-      type="text"
-      id="locationName"
-      formControlName="locationName"
-      class="form-input"
-      [class.error]="isFieldInvalid('locationName')"
-      placeholder="e.g., Conference Hall A, Ljubljana"
-    />
-    <div class="form-hint">Where will this event take place?</div>
-    <div class="error-message" *ngIf="hasError('locationName', 'maxlength')">
-      Location cannot exceed 500 characters
+  <div class="form-row">
+    <div class="form-group" style="flex: 1 1 60%">
+      <label class="form-label">Location <span class="required">*</span></label>
+      <mat-form-field appearance="fill" style="width: 100%">
+        <mat-select formControlName="locationId" placeholder="Select location">
+          <mat-option *ngFor="let loc of locations" [value]="loc.id">
+            {{ loc.name }} — {{ loc.address }} ({{ loc.capacity }} ppl, {{ (loc.pricePerHourCents/100) | number:'1.0-2' }} € /h)
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="error-message" *ngIf="hasError('locationId', 'required')">
+        Location is required
+      </div>
     </div>
+    <div class="form-group" style="flex: 1 1 40%">
+      <label for="locationName" class="form-label">
+        Location name
+      </label>
+      <input
+        type="text"
+        id="locationName"
+        formControlName="locationName"
+        class="form-input"
+        [class.error]="isFieldInvalid('locationName')"
+        placeholder="Auto-filled from selected location (editable)"
+      />
+      <div class="form-hint">You can adjust display name shown on event.</div>
+      <div class="error-message" *ngIf="hasError('locationName', 'maxlength')">
+        Location cannot exceed 500 characters
+      </div>
+    </div>
+  </div>
+
+  <!-- Availability Indicator -->
+  <div class="availability" *ngIf="eventForm.get('locationId')?.value && eventForm.get('eventDate')?.value && eventForm.get('endDate')?.value">
+    <span *ngIf="checkingAvailability">Checking availability...</span>
+    <span *ngIf="!checkingAvailability && availability === true" class="ok">Location is available ✔</span>
+    <span *ngIf="!checkingAvailability && availability === false" class="bad">Location not available ✖</span>
   </div>
 
   <!-- Max Attendees -->

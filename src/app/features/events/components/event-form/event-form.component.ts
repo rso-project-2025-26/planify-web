@@ -1,5 +1,9 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { BookingService } from '@core/services/booking.service';
+import { LocationService, LocationDto } from '@core/services/location.service';
+import { debounceTime, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { Event } from '@core/models/event.model';
 import { OrganizationSummary } from '@core/models/organization.model';
 
@@ -13,20 +17,24 @@ export class EventFormComponent implements OnInit {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() loading = false;
   @Input() organizations: OrganizationSummary[] = [];
-  
+
   @Output() submitForm = new EventEmitter<any>();
   @Output() cancel = new EventEmitter<void>();
 
   eventForm!: FormGroup;
   minDate: string;
 
-  constructor(private fb: FormBuilder) {
+  availability?: boolean | null;
+  checkingAvailability = false;
+
+  constructor(private fb: FormBuilder, private bookingService: BookingService, private locationService: LocationService) {
     const today = new Date();
     this.minDate = today.toISOString().slice(0, 16);
   }
 
   ngOnInit(): void {
     this.initializeForm();
+    this.loadLocations();
   }
 
   initializeForm(): void {
@@ -50,6 +58,10 @@ export class EventFormComponent implements OnInit {
         this.event?.locationName || '',
         [Validators.maxLength(500)]
       ],
+      locationId: [
+        (this as any).event?.locationId || null,
+        [Validators.required]
+      ],
       maxAttendees: [
         this.event?.maxAttendees || null,
         [Validators.min(1)]
@@ -62,6 +74,12 @@ export class EventFormComponent implements OnInit {
         'PRIVATE',
         [Validators.required]
       ]
+    });
+
+    this.setupLocationNameSync();
+
+    this.eventForm.get('locationId')!.valueChanges.subscribe(locationId => {
+      this.availabilityChecker();
     });
   }
 
@@ -91,6 +109,47 @@ export class EventFormComponent implements OnInit {
         this.eventForm.get(key)?.markAsTouched();
       });
     }
+  }
+
+  protected availabilityChecker(): void {
+    const controls = this.eventForm.controls;
+    const locationId = String(controls['locationId'].value);
+    const start = new Date(controls['eventDate'].value).getTime();
+    const end = new Date(controls['endDate'].value).getTime();
+    if (!locationId || !start || !end || end <= start) {
+      this.availability = null;
+      return;
+    }
+    this.checkingAvailability = true;
+    this.bookingService.checkAvailability(locationId, start, end).subscribe({
+      next: (resp) => {
+        this.availability = resp.available;
+        this.checkingAvailability = false;
+      },
+      error: () => {
+        this.availability = null;
+        this.checkingAvailability = false;
+      }
+    });
+  }
+
+  locations: LocationDto[] = [];
+  private loadLocations(): void {
+    this.locationService.getLocations().subscribe({
+      next: (list) => this.locations = list || [],
+      error: () => this.locations = []
+    });
+  }
+
+  private setupLocationNameSync(): void {
+    const controls = this.eventForm.controls;
+    this.eventForm.get('locationId')?.valueChanges.subscribe((id: string) => {
+      const loc = this.locations.find(l => l.id === String(id));
+      if (loc) {
+        // Auto-fill locationName for BE convenience
+        this.eventForm.get('locationName')?.setValue(`${loc.name}, ${loc.address}`);
+      }
+    });
   }
 
   onCancel(): void {

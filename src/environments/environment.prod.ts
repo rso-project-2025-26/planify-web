@@ -4,6 +4,9 @@ export const environment = {
 	// Event Manager Service (Production)
 	eventManagerServiceUrl: "/api",
 
+	// Booking Service (Production)
+	bookingServiceUrl: "api/booking",
+
 	// User Service (Production)
 	userServiceUrl: "/api",
 

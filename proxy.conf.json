@@ -40,5 +40,17 @@
         "secure": false,
         "changeOrigin": true,
         "logLevel": "debug"
+    },
+    "/api/locations": {
+        "target": "http://localhost:8086",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/booking": {
+        "target": "http://localhost:8086",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
     }
 }
