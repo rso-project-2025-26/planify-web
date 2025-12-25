@@ -12,6 +12,12 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Location } from '@angular/common';
 
+interface GuestWithDetails extends GuestList {
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 @Component({
   selector: 'app-event-detail',
   templateUrl: './event-detail.component.html',
@@ -20,7 +26,7 @@ import { Location } from '@angular/common';
 export class EventDetailComponent implements OnInit {
   event?: Event;
   organization?: OrganizationSummary;
-  guests: GuestList[] = [];
+  guests: GuestWithDetails[] = [];
   guestStatuses: Map<string, string> = new Map();
   organizationMembers: OrganizationMember[] = [];
   
@@ -62,12 +68,24 @@ export class EventDetailComponent implements OnInit {
       next: (event) => {
         this.event = event;
         this.loadOrganization();
-        this.checkEditPermissions();
         
-        // Load guests if user can edit
-        if (this.canEdit) {
-          this.loadGuests(eventId);
-          this.loadOrganizationMembers();
+        // Load organization members first, then check permissions and load guests
+        if (this.event?.organizationId) {
+          this.organizationService.getMembers(this.event.organizationId).subscribe({
+            next: (members) => {
+              this.organizationMembers = members || [];
+              this.checkEditPermissions();
+              
+              // Load guests if user can edit
+              if (this.canEdit) {
+                this.loadGuests(eventId);
+              }
+            },
+            error: (err) => {
+              console.error('Failed to load organization members:', err);
+              this.checkEditPermissions();
+            }
+          });
         }
         
         this.loading = false;
@@ -126,6 +144,9 @@ export class EventDetailComponent implements OnInit {
       next: (guests) => {
         this.guests = guests || [];
         
+        // Enrich guests with user details from organization members
+        this.enrichGuestsWithUserDetails();
+        
         // Load RSVP statuses from guest-service
         if (this.guests.length > 0) {
           this.loadGuestStatuses(eventId);
@@ -141,6 +162,21 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  enrichGuestsWithUserDetails(): void {
+    this.guests = this.guests.map(guest => {
+      const member = this.organizationMembers.find(m => m.userId === guest.userId);
+      if (member) {
+        return {
+          ...guest,
+          username: member.username,
+          firstName: member.firstName,
+          lastName: member.lastName
+        };
+      }
+      return guest;
+    });
+  }
+
   loadGuestStatuses(eventId: string): void {
     // Load RSVP statuses from guest-service
     this.guestService.getEventInvitations(eventId).subscribe({
@@ -153,19 +189,6 @@ export class EventDetailComponent implements OnInit {
       error: (err) => {
         console.error('Failed to load RSVP statuses:', err);
         this.loadingGuests = false;
-      }
-    });
-  }
-
-  loadOrganizationMembers(): void {
-    if (!this.event?.organizationId) return;
-    
-    this.organizationService.getMembers(this.event.organizationId).subscribe({
-      next: (members) => {
-        this.organizationMembers = members || [];
-      },
-      error: (err) => {
-        console.error('Failed to load organization members:', err);
       }
     });
   }
@@ -193,6 +216,7 @@ export class EventDetailComponent implements OnInit {
       next: (guest) => {
         this.guests.push(guest);
         this.guestStatuses.set(guest.userId, 'PENDING');
+        this.enrichGuestsWithUserDetails(); // Refresh details
         this.selectedUserId = '';
         this.showInviteForm = false;
         this.inviting = false;
@@ -231,6 +255,23 @@ export class EventDetailComponent implements OnInit {
         });
       }
     });
+  }
+
+  getGuestDisplayName(guest: GuestWithDetails): string {
+    if (guest.firstName && guest.lastName) {
+      return `${guest.firstName} ${guest.lastName}`;
+    }
+    if (guest.username) {
+      return `@${guest.username}`;
+    }
+    return `User #${guest.userId.substring(0, 8)}`;
+  }
+
+  getGuestSubtitle(guest: GuestWithDetails): string {
+    if (guest.username) {
+      return `@${guest.username} • ${guest.userId.substring(0, 8)}`;
+    }
+    return guest.userId.substring(0, 8);
   }
 
   getGuestStatus(userId: string): string {

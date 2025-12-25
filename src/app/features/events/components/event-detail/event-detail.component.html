@@ -156,7 +156,8 @@
           <div class="guest-info">
             <span class="material-icons">person</span>
             <div class="guest-details">
-              <span class="guest-name">User #{{ guest.userId.substring(0, 8) }}</span>
+              <span class="guest-name">{{ getGuestDisplayName(guest) }}</span>
+              <span class="guest-invited">{{ getGuestSubtitle(guest) }}</span>
               <span class="guest-invited">Invited {{ formatDate(guest.invitedAt) }}</span>
             </div>
           </div>

@@ -67,7 +67,7 @@ export class EventService {
 
   // Events I'm invited to or events from my organizations
   getMyEvents(): Observable<Event[]> {
-    return this.authService.getCurrentUserId().pipe(
+    return this.authService.getDatabaseUserId().pipe(
       switchMap(userId => {
         if (!userId) {
           return of([]);
