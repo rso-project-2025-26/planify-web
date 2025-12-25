@@ -5,9 +5,11 @@ import { GuestService } from '@core/services/guest.service';
 import { OrganizationService } from '@core/services/organization.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { Event } from '@core/models/event.model';
-import { GuestList } from '@core/models/guest.model';
-import { OrganizationSummary } from '@core/models/organization.model';
+import { GuestList, Invitation } from '@core/models/guest.model';
+import { OrganizationSummary, OrganizationMember } from '@core/models/organization.model';
 import { DialogService } from '@shared/services/dialog.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-event-detail',
@@ -18,11 +20,20 @@ export class EventDetailComponent implements OnInit {
   event?: Event;
   organization?: OrganizationSummary;
   guests: GuestList[] = [];
+  guestStatuses: Map<string, string> = new Map(); // userId -> RSVP status
+  organizationMembers: OrganizationMember[] = [];
+  
   loading = true;
+  loadingGuests = false;
   error = '';
   
   canEdit = false;
   currentUserId?: string;
+  
+  // Invite guest form
+  showInviteForm = false;
+  selectedUserId = '';
+  inviting = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -51,10 +62,11 @@ export class EventDetailComponent implements OnInit {
         this.loadOrganization();
         this.checkEditPermissions();
         
-        // TODO: Load guests when guest list management is implemented
-        // if (this.canEdit) {
-        //   this.loadGuests(eventId);
-        // }
+        // Load guests if user can edit
+        if (this.canEdit) {
+          this.loadGuests(eventId);
+          this.loadOrganizationMembers();
+        }
         
         this.loading = false;
       },
@@ -96,8 +108,6 @@ export class EventDetailComponent implements OnInit {
       next: (memberships) => {
         const membership = memberships.find(m => m.id === this.event?.organizationId);
         if (membership) {
-          // Check if user has admin privileges
-          // This assumes membership has roles property - adjust based on your model
           this.authService.hasAnyRole(['ORG_ADMIN', 'ORGANISER']).subscribe(hasRole => {
             this.canEdit = hasRole;
           });
@@ -106,17 +116,133 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  // TODO: Implement guest list loading
-  // loadGuests(eventId: number): void {
-  //   this.guestService.getAllGuestsForEvent(eventId).subscribe({
-  //     next: (guests) => {
-  //       this.guests = guests;
-  //     },
-  //     error: (err) => {
-  //       console.error('Failed to load guests:', err);
-  //     }
-  //   });
-  // }
+  loadGuests(eventId: string): void {
+    this.loadingGuests = true;
+    
+    // Load guest list from event-manager
+    this.eventService.getEventGuests(eventId).subscribe({
+      next: (guests) => {
+        this.guests = guests || [];
+        
+        // Load RSVP statuses from guest-service
+        if (this.guests.length > 0) {
+          this.loadGuestStatuses(eventId);
+        } else {
+          this.loadingGuests = false;
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load guests:', err);
+        this.guests = [];
+        this.loadingGuests = false;
+      }
+    });
+  }
+
+  loadGuestStatuses(eventId: string): void {
+    // Load RSVP statuses from guest-service
+    this.guestService.getEventInvitations(eventId).subscribe({
+      next: (invitations) => {
+        invitations.forEach(inv => {
+          this.guestStatuses.set(inv.userId, inv.rsvpStatus);
+        });
+        this.loadingGuests = false;
+      },
+      error: (err) => {
+        console.error('Failed to load RSVP statuses:', err);
+        this.loadingGuests = false;
+      }
+    });
+  }
+
+  loadOrganizationMembers(): void {
+    if (!this.event?.organizationId) return;
+    
+    this.organizationService.getMembers(this.event.organizationId).subscribe({
+      next: (members) => {
+        this.organizationMembers = members || [];
+      },
+      error: (err) => {
+        console.error('Failed to load organization members:', err);
+      }
+    });
+  }
+
+  getAvailableMembers(): OrganizationMember[] {
+    const invitedUserIds = new Set(this.guests.map(g => g.userId));
+    return this.organizationMembers.filter(m => !invitedUserIds.has(m.userId));
+  }
+
+  toggleInviteForm(): void {
+    this.showInviteForm = !this.showInviteForm;
+    this.selectedUserId = '';
+  }
+
+  inviteGuest(): void {
+    if (!this.selectedUserId || !this.event?.id || !this.event?.organizationId) return;
+    
+    this.inviting = true;
+    
+    this.eventService.inviteGuestToEvent(
+      this.event.id,
+      this.selectedUserId,
+      this.event.organizationId
+    ).subscribe({
+      next: (guest) => {
+        this.guests.push(guest);
+        this.guestStatuses.set(guest.userId, 'PENDING');
+        this.selectedUserId = '';
+        this.showInviteForm = false;
+        this.inviting = false;
+      },
+      error: (err) => {
+        console.error('Failed to invite guest:', err);
+        alert('Failed to invite guest. Please try again.');
+        this.inviting = false;
+      }
+    });
+  }
+
+  removeGuest(userId: string): void {
+    if (!this.event?.id) return;
+    
+    const guest = this.guests.find(g => g.userId === userId);
+    if (!guest) return;
+    
+    this.dialogService.openConfirmDialog({
+      title: 'Remove Guest',
+      message: 'Are you sure you want to remove this guest from the event?',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      isDangerous: true
+    }).then(confirmed => {
+      if (confirmed) {
+        this.eventService.removeGuestFromEvent(this.event!.id!, userId).subscribe({
+          next: () => {
+            this.guests = this.guests.filter(g => g.userId !== userId);
+            this.guestStatuses.delete(userId);
+          },
+          error: (err) => {
+            console.error('Failed to remove guest:', err);
+            alert('Failed to remove guest. Please try again.');
+          }
+        });
+      }
+    });
+  }
+
+  getGuestStatus(userId: string): string {
+    return this.guestStatuses.get(userId) || 'PENDING';
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'ACCEPTED': return 'status-accepted';
+      case 'DECLINED': return 'status-declined';
+      case 'MAYBE': return 'status-maybe';
+      default: return 'status-pending';
+    }
+  }
 
   editEvent(): void {
     if (this.canEdit) {
@@ -177,7 +303,7 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
-  formatDate(dateString: string): string {
+  formatDate(dateString?: string): string {
     if (!dateString) return '';
     
     return new Date(dateString).toLocaleDateString('en-US', {

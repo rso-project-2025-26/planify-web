@@ -101,25 +101,80 @@
       </div>
     </div>
 
-    <!-- Guest List - TODO: Implement later -->
-    <!-- <div class="guests-card" *ngIf="canEdit && guests.length > 0">
-      <h2>Guest List ({{ guests.length }})</h2>
-      
-      <div class="guests-list">
-        <div class="guest-item" *ngFor="let guest of guests">
-          <div class="guest-info">
-            <span class="guest-name">User #{{ guest.userId }}</span>
-            <span class="guest-role">{{ guest.role }}</span>
-          </div>
-          <span class="rsvp-badge" [ngClass]="{
-            'rsvp-pending': guest.rsvpStatus === 'PENDING',
-            'rsvp-accepted': guest.rsvpStatus === 'ACCEPTED',
-            'rsvp-declined': guest.rsvpStatus === 'DECLINED'
-          }">
-            {{ guest.rsvpStatus }}
-          </span>
+    <!-- Guest List -->
+    <div class="guests-card" *ngIf="canEdit">
+      <div class="guests-header">
+        <h2>Guest List ({{ guests.length }})</h2>
+        <button class="btn-invite" (click)="toggleInviteForm()" *ngIf="!showInviteForm">
+          <span class="material-icons">person_add</span>
+          Invite Guest
+        </button>
+      </div>
+
+      <!-- Invite Form -->
+      <div class="invite-form" *ngIf="showInviteForm">
+        <h3>Invite Organization Member</h3>
+        <div class="form-group">
+          <label for="guestSelect">Select Member</label>
+          <select 
+            id="guestSelect" 
+            [(ngModel)]="selectedUserId" 
+            [disabled]="inviting"
+            class="form-control">
+            <option value="">-- Select a member --</option>
+            <option *ngFor="let member of getAvailableMembers()" [value]="member.userId">
+              {{ member.firstName }} {{ member.lastName }} ({{ member.username }})
+            </option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button 
+            class="btn-primary" 
+            (click)="inviteGuest()" 
+            [disabled]="!selectedUserId || inviting">
+            {{ inviting ? 'Inviting...' : 'Send Invitation' }}
+          </button>
+          <button 
+            class="btn-secondary" 
+            (click)="toggleInviteForm()" 
+            [disabled]="inviting">
+            Cancel
+          </button>
         </div>
       </div>
-    </div> -->
+
+      <!-- Loading Guests -->
+      <app-loading-spinner *ngIf="loadingGuests" message="Loading guests..."></app-loading-spinner>
+
+      <!-- Guest List -->
+      <div class="guests-list" *ngIf="!loadingGuests && guests.length > 0">
+        <div class="guest-item" *ngFor="let guest of guests">
+          <div class="guest-info">
+            <span class="material-icons">person</span>
+            <div class="guest-details">
+              <span class="guest-name">User #{{ guest.userId.substring(0, 8) }}</span>
+              <span class="guest-invited">Invited {{ formatDate(guest.invitedAt) }}</span>
+            </div>
+          </div>
+          <div class="guest-actions">
+            <span class="rsvp-badge" [ngClass]="getStatusClass(getGuestStatus(guest.userId))">
+              {{ getGuestStatus(guest.userId) }}
+            </span>
+            <button 
+              class="btn-remove" 
+              (click)="removeGuest(guest.userId)"
+              title="Remove guest">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Guests -->
+      <div class="no-guests" *ngIf="!loadingGuests && guests.length === 0">
+        <span class="material-icons">people_outline</span>
+        <p>No guests invited yet</p>
+      </div>
+    </div>
   </div>
 </div>

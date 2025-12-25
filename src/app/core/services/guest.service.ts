@@ -71,4 +71,9 @@ export class GuestService {
   getGuestsByStatus(eventId: string, status: RsvpStatus): Observable<GuestList[]> {
     return this.apiService.get<GuestList[]>(`${this.endpoint}/event/${eventId}/status/${status}`);
   }
+
+  // Get all invitations for an event (includes RSVP statuses)
+  getEventInvitations(eventId: string): Observable<Invitation[]> {
+    return this.apiService.get<Invitation[]>(`${this.endpoint}/internal/events/${eventId}/invitations`);
+  }
 }

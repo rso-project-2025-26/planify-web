@@ -6,6 +6,7 @@ import { GuestService } from './guest.service';
 import { AuthService } from '../../auth/auth.service';
 import { OrganizationService } from './organization.service';
 import { Event, EventStatus, CreateEventRequest, UpdateEventRequest } from '@core/models/event.model';
+import { GuestList } from '@core/models/guest.model';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -154,5 +155,21 @@ export class EventService {
 
   completeEvent(id: string): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/complete`, {});
+  }
+
+  // Guest List Management (from event-manager)
+  getEventGuests(eventId: string): Observable<GuestList[]> {
+    return this.apiService.get<GuestList[]>(`${this.endpoint}/${eventId}/guests`);
+  }
+
+  inviteGuestToEvent(eventId: string, userId: string, organizationId: string): Observable<GuestList> {
+    return this.apiService.post<GuestList>(
+      `${this.endpoint}/${eventId}/guests/invite?userId=${userId}&organizationId=${organizationId}`,
+      null
+    );
+  }
+
+  removeGuestFromEvent(eventId: string, userId: string): Observable<void> {
+    return this.apiService.delete<void>(`${this.endpoint}/${eventId}/guests/${userId}`);
   }
 }
