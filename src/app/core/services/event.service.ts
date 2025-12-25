@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, combineLatest, of } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
+import { GuestService } from './guest.service';
+import { AuthService } from '../../auth/auth.service';
+import { OrganizationService } from './organization.service';
 import { Event, EventStatus, CreateEventRequest, UpdateEventRequest } from '@core/models/event.model';
+import { GuestList, Invitation } from '@core/models/guest.model';
+import { OrganizationSummary } from '@core/models/organization.model';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -10,14 +16,19 @@ import { HttpParams } from '@angular/common/http';
 export class EventService {
   private readonly endpoint = '/events';
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private guestService: GuestService,
+    private authService: AuthService,
+    private organizationService: OrganizationService
+  ) {}
 
   // CRUD Operations
   getAllEvents(): Observable<Event[]> {
     return this.apiService.get<Event[]>(this.endpoint);
   }
 
-  getEventById(id: number): Observable<Event> {
+  getEventById(id: string): Observable<Event> {
     return this.apiService.get<Event>(`${this.endpoint}/${id}`);
   }
 
@@ -25,11 +36,11 @@ export class EventService {
     return this.apiService.post<Event>(this.endpoint, event);
   }
 
-  updateEvent(id: number, event: UpdateEventRequest): Observable<Event> {
+  updateEvent(id: string, event: UpdateEventRequest): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}`, event);
   }
 
-  deleteEvent(id: number): Observable<void> {
+  deleteEvent(id: string): Observable<void> {
     return this.apiService.delete<void>(`${this.endpoint}/${id}`);
   }
 
@@ -54,16 +65,113 @@ export class EventService {
     return this.apiService.get<Event[]>(`${this.endpoint}/past`);
   }
 
+  // Events I'm invited to or events from my organizations
+  getMyEvents(): Observable<Event[]> {
+    return this.authService.getDatabaseUserId().pipe(
+      switchMap(userId => {
+        if (!userId) {
+          return of([]);
+        }
+        
+        return combineLatest([
+          this.guestService.getMyInvitations(userId), // All invitations (any status)
+          this.organizationService.getMyAdminOrganizations().pipe(
+            catchError(() => of([]))
+          )
+        ]).pipe(
+          switchMap(([invitations, myOrgs]) => {
+            // Get event IDs from invitations
+            const invitedEventIds = invitations.map(inv => inv.eventId);
+            
+            // Get organization IDs where user can organize events
+            const myOrgIds = myOrgs.map(org => org.id);
+            
+            // Fetch events from user's organizations
+            const orgEventRequests = myOrgIds.length > 0
+              ? myOrgIds.map(orgId => 
+                  this.getEventsByOrganization(orgId).pipe(
+                    catchError(err => {
+                      console.error(`Failed to fetch events for org ${orgId}:`, err);
+                      return of([]);
+                    })
+                  )
+                )
+              : [];
+            
+            // Fetch full event details for invited events
+            const inviteEventRequests = invitedEventIds.map(id => 
+              this.getEventById(id).pipe(
+                catchError(err => {
+                  console.error(`Failed to fetch event ${id}:`, err);
+                  return of(null);
+                })
+              )
+            );
+            
+            // Combine all requests
+            const allRequests = [...orgEventRequests, ...inviteEventRequests];
+            
+            if (allRequests.length === 0) {
+              return of([]);
+            }
+            
+            return forkJoin(allRequests).pipe(
+              map(results => {
+                // Flatten org events and filter invited events
+                const orgEvents = results
+                  .slice(0, orgEventRequests.length)
+                  .flat() as Event[];
+                const invitedEvents = results
+                  .slice(orgEventRequests.length)
+                  .filter(e => e !== null) as Event[];
+                
+                // Combine invited and organization events
+                const allEvents = [...invitedEvents, ...orgEvents];
+                const uniqueEvents = Array.from(
+                  new Map(allEvents.map(e => [e.id, e])).values()
+                );
+                // Sort by date
+                return uniqueEvents.sort((a, b) => 
+                  new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+                );
+              })
+            );
+          })
+        );
+      }),
+      catchError(err => {
+        console.error('Failed to load my events:', err);
+        return of([]);
+      })
+    );
+  }
+
   // Status Management
-  publishEvent(id: number): Observable<Event> {
+  publishEvent(id: string): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/publish`, {});
   }
 
-  cancelEvent(id: number): Observable<Event> {
+  cancelEvent(id: string): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/cancel`, {});
   }
 
-  completeEvent(id: number): Observable<Event> {
+  completeEvent(id: string): Observable<Event> {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/complete`, {});
+  }
+
+  // Guest List Management
+  getEventGuests(eventId: string): Observable<GuestList[]> {
+    return this.apiService.get<GuestList[]>(`${this.endpoint}/${eventId}/guests`);
+  }
+
+  inviteGuestToEvent(eventId: string, userId: string, organizationId: string): Observable<GuestList> {
+    return this.apiService.post<GuestList>(
+      `${this.endpoint}/${eventId}/guests/invite?userId=${userId}&organizationId=${organizationId}`,
+      null
+    );
+  }
+
+  removeGuestFromEvent(eventId: string, userId: string): Observable<void> {
+    return this.apiService.delete<void>(`${this.endpoint}/${eventId}/guests/${userId}`);
   }
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { OrganizationService } from '@core/services/organization.service';
+import { DialogService } from '@shared/services/dialog.service';
 import {
   OrgPendingInvitation, OrganizationJoinRequest, OrganizationMember, OrganizationRole, OrganizationSummary,
   UserData
@@ -31,7 +32,10 @@ export class OrgAdminMembersComponent implements OnInit {
   
   recentlySaved: Set<string> = new Set();
 
-  constructor(private orgService: OrganizationService) {}
+  constructor(
+    private orgService: OrganizationService,
+    private dialogService: DialogService
+  ) {}
 
   ngOnInit(): void {
     this.loadAdminOrgs();
@@ -101,9 +105,25 @@ export class OrgAdminMembersComponent implements OnInit {
 
   remove(member: OrganizationMember): void {
     if (!this.activeOrg) return;
-    if (!confirm(`Remove @${member.username} from ${this.activeOrg.name}?`)) return;
-    this.orgService.removeMember(this.activeOrg.id, member.userId).subscribe({
-      next: () => (this.members = this.members.filter((m) => m.userId !== member.userId)),
+    
+    this.dialogService.openConfirmDialog({
+      title: 'Remove Member',
+      message: `Are you sure you want to remove @${member.username} from organization ${this.activeOrg.name}?`,
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      isDangerous: true
+    }).then(confirmed => {
+      if (confirmed) {
+        this.orgService.removeMember(this.activeOrg!.id, member.userId).subscribe({
+          next: () => {
+            this.members = this.members.filter((m) => m.userId !== member.userId);
+          },
+          error: (err) => {
+            console.error('Failed to remove member:', err);
+            alert('Failed to remove member. Please try again.');
+          }
+        });
+      }
     });
   }
 

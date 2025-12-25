@@ -1,23 +1,35 @@
 <div class="create-event-container">
-  <!-- Page Header -->
   <div class="page-header">
-    <h1 class="page-title">Create New Event</h1>
-    <p class="page-subtitle">Fill in the details below to create your event</p>
+    <h1 class="page-title">Create Event</h1>
+    <p class="subtitle">Organize a new event for your organization</p>
   </div>
 
-  <!-- Error Message -->
-  <div class="error-alert" *ngIf="error">
-		<span class="material-icons alert-icon">error</span>
-		<span>{{ error }}</span>
-	</div>
+  <!-- Loading organizations -->
+  <app-loading-spinner *ngIf="loadingOrgs"></app-loading-spinner>
 
-  <!-- Event Form Card -->
-  <div class="form-card">
+  <!-- Error message -->
+  <div class="error-banner" *ngIf="error && !loadingOrgs">
+    <span class="material-icons">error</span>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Event form -->
+  <div class="form-container" *ngIf="!loadingOrgs && organizations.length > 0">
     <app-event-form
       mode="create"
       [loading]="loading"
+      [organizations]="organizations"
       (submitForm)="onFormSubmit($event)"
-      (cancel)="onCancel()">
-    </app-event-form>
+      (cancel)="onCancel()"
+    ></app-event-form>
+  </div>
+
+  <!-- No organizations state -->
+  <div class="no-organizations" *ngIf="!loadingOrgs && organizations.length === 0 && !error">
+    <span class="material-icons">business</span>
+    <p>You need to be an organiser or admin of an organization to create events.</p>
+    <button class="btn-primary" (click)="router.navigate(['/organizations/my'])">
+      Go to Organizations
+    </button>
   </div>
 </div>

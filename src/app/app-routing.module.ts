@@ -4,7 +4,7 @@ import { RouterModule, Routes } from "@angular/router";
 const routes: Routes = [
 	{
 		path: "",
-		redirectTo: "/events",
+		redirectTo: "/events/public",
 		pathMatch: "full",
 	},
 	{
@@ -14,20 +14,20 @@ const routes: Routes = [
 				(m) => m.DashboardModule
 			),
 	},
- {
-    path: "events",
-    loadChildren: () =>
-      import("./features/events/events.module").then(
-        (m) => m.EventsModule
-      ),
-  },
-  {
-    path: "organizations",
-    loadChildren: () =>
-      import("./features/organizations/organizations.module").then(
-        (m) => m.OrganizationsModule
-      ),
-  },
+	{
+		path: "events",
+		loadChildren: () =>
+			import("./features/events/events.module").then(
+				(m) => m.EventsModule
+			),
+	},
+	{
+		path: "organizations",
+		loadChildren: () =>
+			import("./features/organizations/organizations.module").then(
+				(m) => m.OrganizationsModule
+			),
+	},
 	{
 		path: "auth",
 		loadChildren: () =>
@@ -35,7 +35,7 @@ const routes: Routes = [
 	},
 	{
 		path: "**",
-		redirectTo: "/events",
+		redirectTo: "/events/public",
 	},
 ];
 

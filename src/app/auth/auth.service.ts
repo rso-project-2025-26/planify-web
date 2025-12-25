@@ -3,7 +3,7 @@ import {RegisterRequest, RegisterResponse} from "@core/models/auth.model";
 import {OidcSecurityService as OidcService} from "angular-auth-oidc-client";
 import {HttpClient} from '@angular/common/http';
 import {combineLatest, Observable, of} from "rxjs";
-import {map, switchMap} from "rxjs/operators";
+import {map, switchMap, catchError} from "rxjs/operators";
 import {environment} from '@environments/environment';
 
 @Injectable({ providedIn: "root" })
@@ -18,8 +18,8 @@ export class AuthService {
   private userServiceUrl = `${environment.userServiceUrl}/auth`;
 
 	roles$ = this.isAuthenticated$.pipe(
-		// Če uporabnik ni prijavljen -> prazen seznam vlog
-		// če je prijavljen -> preberemo token in ga dekodiramo
+		// ÄŒe uporabnik ni prijavljen -> prazen seznam vlog
+		// Äe je prijavljen -> preberemo token in ga dekodiramo
 		switchMap(isAuth => {
 			if (!isAuth) return of([] as string[]);
 			return this.oidc.getAccessToken().pipe(
@@ -113,4 +113,10 @@ export class AuthService {
 		);
 	}
 
+	getDatabaseUserId(): Observable<string | null> {
+		return this.http.get<any>(`${environment.userServiceUrl}/users/me`).pipe(
+			map(user => user?.id || null),
+			catchError(() => of(null))
+		);
+	}
 }

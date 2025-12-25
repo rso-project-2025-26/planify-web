@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { EventService } from '../../../../core/services/event.service';
+import { GuestService } from '../../../../core/services/guest.service';
 import { Event, EventStatus, EventType } from '../../../../core/models/event.model';
 import { AuthService } from '../../../../auth/auth.service';
 
@@ -10,8 +11,7 @@ import { AuthService } from '../../../../auth/auth.service';
   styleUrls: ['./event-list.component.scss']
 })
 export class EventListComponent implements OnInit {
-  @Input() eventType: 'public' | 'my-events' | 'all' = 'public';
-  @Input() organizationId?: string;
+  eventType: 'public' | 'my-events' = 'public';
 
   events: Event[] = [];
   filteredEvents: Event[] = [];
@@ -27,48 +27,54 @@ export class EventListComponent implements OnInit {
   // For dropdowns
   uniqueLocations: string[] = [];
   
+  // Invitations dropdown
+  showInvitationsDropdown = false;
+  pendingInvitationsCount = 0;
+  
   constructor(
     private eventService: EventService,
+    private guestService: GuestService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.loadEvents();
+    // Read route data to determine which type of events to load
+    this.route.data.subscribe(data => {
+      this.eventType = data['eventType'] || 'public';
+      this.loadEvents();
+      
+      // Load pending invitations count for "My Events" tab
+      if (this.eventType === 'my-events') {
+        this.loadPendingInvitationsCount();
+      }
+    });
   }
 
   /**
-   * Load public events from API
+   * Load events based on the event type (public or my-events)
    */
   loadEvents(): void {
     this.loading = true;
     this.error = '';
-    let request$;
     
-    switch(this.eventType) {
-      case 'public':
-        request$ = this.eventService.getPublicEvents();
-        break;
-      case 'my-events':
-        request$ = this.eventService.getEventsByOrganization(this.organizationId!);
-        break;
-      case 'all':
-        request$ = this.eventService.getAllEvents();
-        break;
-      default:
-        request$ = this.eventService.getPublicEvents();
-    }
+    const request$ = this.eventType === 'my-events' 
+      ? this.eventService.getMyEvents()
+      : this.eventService.getPublicEvents();
     
     request$.subscribe({
       next: (events) => {
-        this.events = events;
-        this.filteredEvents = events;
+        this.events = events || [];
+        this.filteredEvents = events || [];
         this.extractUniqueLocations();
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading events:', err);
         this.error = 'Failed to load events. Please try again later.';
+        this.events = [];
+        this.filteredEvents = [];
         this.loading = false;
       }
     });
@@ -78,6 +84,10 @@ export class EventListComponent implements OnInit {
    * Extract unique locations for filter dropdown
    */
   extractUniqueLocations(): void {
+    if (!this.events || this.events.length === 0) {
+      this.uniqueLocations = [];
+      return;
+    }
     const locations = this.events
       .map(e => e.locationName)
       .filter((loc): loc is string => !!loc);
@@ -187,7 +197,7 @@ export class EventListComponent implements OnInit {
   /**
    * View event details
    */
-  viewEvent(eventId: number): void {
+  viewEvent(eventId: string): void {
     this.router.navigate(['/events', eventId]);
   }
 
@@ -199,11 +209,11 @@ export class EventListComponent implements OnInit {
       if (!isAuth) {
         // Show message and redirect to login
         alert('Please sign in to RSVP to this event');
-        this.router.navigate(['/auth/login']);
+        this.authService.login();
         return;
       }
       
-      // For now
+      // For now, navigate to event detail
       this.viewEvent(event.id!);
     });
   }
@@ -219,7 +229,7 @@ export class EventListComponent implements OnInit {
    * Navigate to login
    */
   goToLogin(): void {
-    this.router.navigate(['/auth/login']);
+    this.authService.login();
   }
 
   /**
@@ -277,5 +287,55 @@ export class EventListComponent implements OnInit {
     return event.maxAttendees !== null && 
            event.maxAttendees !== undefined &&
            event.currentAttendees >= event.maxAttendees;
+  }
+
+  /**
+   * Get page title based on event type
+   */
+  getPageTitle(): string {
+    return this.eventType === 'my-events' ? 'My Events' : 'Public Events';
+  }
+
+  /**
+   * Get page subtitle based on event type
+   */
+  getPageSubtitle(): string {
+    return this.eventType === 'my-events' 
+      ? 'Events you are attending or invited to'
+      : 'Explore and participate in upcoming activities';
+  }
+
+  /**
+   * Load pending invitations count
+   */
+  loadPendingInvitationsCount(): void {
+    this.authService.getDatabaseUserId().subscribe(userId => {
+      if (!userId) return;
+
+      this.guestService.getMyInvitations(userId).subscribe({
+        next: (invitations) => {
+          this.pendingInvitationsCount = invitations.filter(inv => inv.rsvpStatus === 'PENDING').length;
+        },
+        error: (err) => {
+          console.error('Failed to load pending invitations count:', err);
+        }
+      });
+    });
+  }
+
+  /**
+   * Toggle invitations dropdown
+   */
+  toggleInvitationsDropdown(): void {
+    this.showInvitationsDropdown = !this.showInvitationsDropdown;
+  }
+
+  /**
+   * Close invitations dropdown
+   */
+  closeInvitationsDropdown(): void {
+    this.showInvitationsDropdown = false;
+    // Reload count after closing (in case user accepted/declined)
+    this.loadPendingInvitationsCount();
   }
 }

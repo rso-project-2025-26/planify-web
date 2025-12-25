@@ -1,100 +1,164 @@
-<app-loading-spinner *ngIf="loading"></app-loading-spinner>
+<div class="admin-container">
 
-<div class="page-container">
-  <h3>Organization Members of </h3>
-
-  <div class="toolbar" *ngIf="organizations.length > 0">
-    <label class="label">{{ organizations[0].name }}</label>
-
-    <button class="btn btn-primary" (click)="openInvite()">Invite user</button>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Manage Members</h1>
+      <p class="subtitle" *ngIf="activeOrg">{{ activeOrg.name }}</p>
+    </div>
+    <button class="btn-create" (click)="openInvite()" *ngIf="activeOrg">
+      <span class="material-icons">person_add</span>
+      Invite User
+    </button>
   </div>
 
-  <div *ngIf="activeOrg; else noOrg">
-    <!-- Pending Join Requests (collapsible) -->
-    <div class="card" *ngIf="joinRequests.length > 0">
-      <div class="card-header clickable" (click)="joinRequestsCollapsed = !joinRequestsCollapsed">
-        <div class="title">
-          Pending join requests
-          <span class="badge" *ngIf="joinRequestsCollapsed">{{ joinRequests.length }}</span>
-        </div>
-        <div class="chevron" [class.open]="!joinRequestsCollapsed"></div>
+  <!-- Loading -->
+  <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+  <div *ngIf="activeOrg && !loading; else noOrg">
+    
+    <!-- Pending Join Requests -->
+    <section class="requests-section" *ngIf="joinRequests.length > 0">
+      <div class="section-header">
+        <h2>Pending Join Requests</h2>
+        <span class="badge badge-red">{{ joinRequests.length }}</span>
       </div>
 
-      <ng-container *ngIf="!joinRequestsCollapsed">
-        <div class="list-header">
-          <div>User</div>
-          <div>Date</div>
-          <div>Actions</div>
-        </div>
-        <div class="list-row" *ngFor="let r of joinRequests">
-          <div class="user">
-            <div class="email">{{ r.user.username }}</div>
-            <div class="username">ID: {{ r.user.id }}</div>
-          </div>
-          <div class="date">{{ r.createdAt | date:'short' }}</div>
-          <div class="actions">
-            <button class="btn btn-primary" (click)="acceptJoin(r)">Accept</button>
-            <button class="btn btn-danger" (click)="rejectJoin(r)">Reject</button>
-          </div>
-        </div>
-      </ng-container>
-    </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Requested</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let req of joinRequests">
+              <td>
+                <div class="user-info">
+                  <span class="user-name">{{ req.user.username }}</span>
+                  <span class="user-meta">ID: {{ req.user.id }}</span>
+                </div>
+              </td>
+              <td>{{ req.createdAt | date:'short' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-primary btn-sm" (click)="acceptJoin(req)">Accept</button>
+                  <button class="btn-danger btn-sm" (click)="rejectJoin(req)">Reject</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-    <div class="card">
-      <div class="list-header">
-        <div>User</div>
-        <div>Roles</div>
-        <div>Actions</div>
+    <!-- Members List -->
+    <section class="members-section">
+      <div class="section-header">
+        <h2>Organization Members</h2>
       </div>
-      <div class="list-row" *ngFor="let m of members">
-        <div class="user">
-            <div class="fullname">{{ m.firstName }} {{ m.lastName }}</div>
-            <div class="username">{{ m.username }}</div>
-        </div>
-        <div class="roles">
-          <label class="role-chip" *ngFor="let r of roles">
-            <input type="checkbox" [checked]="roleSelections[m.userId].has(r)" (change)="toggleRole(m, r)" />
-            <span>{{ r }}</span>
-          </label>
-        </div>
-        <div class="actions">
-          <button class="btn btn-secondary" (click)="saveRoles(m)">Save</button>
-          <span class="success-check" *ngIf="recentlySaved.has(m.userId)">✓</span>
-          <button class="btn btn-danger" (click)="remove(m)">Remove</button>
-        </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Roles</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let member of members">
+              <td>
+                <div class="user-info">
+                  <span class="user-name">{{ member.firstName }} {{ member.lastName }}</span>
+                  <span class="user-meta">{{ member.username }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="role-chips">
+                  <label class="role-chip" *ngFor="let role of roles">
+                    <input 
+                      type="checkbox" 
+                      [checked]="roleSelections[member.userId].has(role)" 
+                      (change)="toggleRole(member, role)"
+                    />
+                    <span>{{ role }}</span>
+                  </label>
+                </div>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-secondary btn-sm" (click)="saveRoles(member)">Save</button>
+                  <span class="success-icon material-icons" *ngIf="recentlySaved.has(member.userId)">check_circle</span>
+                  <button class="btn-danger btn-sm" (click)="remove(member)">Remove</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
+
   </div>
 
   <ng-template #noOrg>
-    <p>You are not an admin of any organization yet.</p>
+    <div class="no-organization" *ngIf="!loading">
+      <span class="material-icons">admin_panel_settings</span>
+      <p>You are not an admin of any organization yet.</p>
+    </div>
   </ng-template>
 
-  <!-- Invite Popup -->
+  <!-- Invite Modal -->
   <div class="modal-backdrop" *ngIf="inviteOpen" (click)="closeInvite()"></div>
-  <div class="modal" *ngIf="inviteOpen">
-    <h2>Invite new users to your organization</h2>
+  <div class="modal-container" *ngIf="inviteOpen">
+    <div class="modal-header">
+      <h2>Invite User</h2>
+      <button class="modal-close" (click)="closeInvite()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    
     <div class="modal-content">
-      <input type="text" placeholder="Search username..." [(ngModel)]="searchUsername" (keyup.enter)="searchUsers()" />
-      <button class="btn btn-primary" (click)="searchUsers()" [disabled]="searching">Search</button>
-    </div>
-    <div class="results">
-      <div *ngFor="let u of userResults" class="result-row">
-        <div class="user">
-          <div class="fullname">{{ u.username }}</div>
-          <div class="username">{{ u.email }}</div>
-        </div>
-          <ng-container [ngSwitch]="getStatus(u)">
-              <span class="status status-ok" *ngSwitchCase="'Already a member'">Already a member</span>
-              <span class="status status-warn" *ngSwitchCase="'Invitation pending'">Invitation pending</span>
-              <span class="status status-warn" *ngSwitchCase="'Join request pending'">Join request pending</span>
-              <button class="btn btn-primary" *ngSwitchDefault (click)="invite(u.username, u.id)" [disabled]="!canInvite(u)">Invite</button>
-          </ng-container>
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input 
+          type="text" 
+          placeholder="Search by username..." 
+          [(ngModel)]="searchUsername" 
+          (keyup.enter)="searchUsers()"
+          autofocus
+        />
+        <button class="btn-create" (click)="searchUsers()" [disabled]="searching">
+          Search
+        </button>
       </div>
-      <div *ngIf="!searching && userResults?.length === 0 && searchUsername">No users found.</div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" (click)="closeInvite()">Close</button>
+
+      <div class="search-results" *ngIf="userResults && userResults.length > 0">
+        <div class="result-item" *ngFor="let user of userResults">
+          <div class="result-info">
+            <h4>{{ user.username }}</h4>
+            <p>{{ user.email }}</p>
+          </div>
+          <div class="result-action">
+            <ng-container [ngSwitch]="getStatus(user)">
+              <span class="status-badge status-success" *ngSwitchCase="'Already a member'">Member</span>
+              <span class="status-badge status-warning" *ngSwitchCase="'Invitation pending'">Invited</span>
+              <span class="status-badge status-warning" *ngSwitchCase="'Join request pending'">Pending</span>
+              <button class="btn-primary btn-sm" *ngSwitchDefault (click)="invite(user.username, user.id)" [disabled]="!canInvite(user)">
+                Invite
+              </button>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-results" *ngIf="!searching && userResults?.length === 0 && searchUsername">
+        <p>No users found matching "{{ searchUsername }}"</p>
+      </div>
     </div>
   </div>
+
 </div>

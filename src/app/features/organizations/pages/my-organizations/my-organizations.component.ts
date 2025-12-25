@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { OrganizationInvitation, OrganizationSummary, UserPendingJoinRequest } from '@core/models/organization.model';
 import { OrganizationService } from '@core/services/organization.service';
 
@@ -7,18 +9,19 @@ import { OrganizationService } from '@core/services/organization.service';
   templateUrl: './my-organizations.component.html',
   styleUrls: ['./my-organizations.component.scss']
 })
-export class MyOrganizationsComponent implements OnInit {
+export class MyOrganizationsComponent implements OnInit, OnDestroy {
   loading = false;
   memberships: OrganizationSummary[] = [];
   invitations: OrganizationInvitation[] = [];
   pendingJoinRequests: UserPendingJoinRequest[] = [];
 
-  invitationsCollapsed = false;
-
   joinOpen = false;
   searchQuery = '';
   orgResults: OrganizationSummary[] = [];
   searching = false;
+
+  private searchQuery$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   constructor(private orgService: OrganizationService) {}
 
@@ -26,6 +29,20 @@ export class MyOrganizationsComponent implements OnInit {
     this.loadMemberships();
     this.loadInvitations();
     this.loadPendingJoinRequests();
+    
+    // Setup autocomplete search with debounce
+    this.searchQuery$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(query => this.performSearch(query));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadMemberships(): void {
@@ -70,17 +87,29 @@ export class MyOrganizationsComponent implements OnInit {
     this.joinOpen = false;
   }
 
-  searchOrgs(): void {
-    const q = this.searchQuery.trim();
-    if (!q) {
+  onSearchInput(value: string): void {
+    this.searchQuery = value;
+    this.searchQuery$.next(value);
+  }
+
+  performSearch(query: string): void {
+    const trimmed = query.trim();
+    if (!trimmed) {
       this.orgResults = [];
+      this.searching = false;
       return;
     }
+    
     this.searching = true;
-    this.orgService.searchOrganizations(q).subscribe({
-      next: (res) => (this.orgResults = res),
-      error: () => (this.searching = false),
-      complete: () => (this.searching = false),
+    this.orgService.searchOrganizations(trimmed).subscribe({
+      next: (res) => {
+        // Show top 5 results
+        this.orgResults = res.slice(0, 5);
+        this.searching = false;
+      },
+      error: () => {
+        this.searching = false;
+      }
     });
   }
 

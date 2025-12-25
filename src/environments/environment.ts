@@ -4,13 +4,19 @@ export const environment = {
 	// Event Manager Service
 	eventManagerServiceUrl: "/api",
 
+	// Booking Service (REST for UI)
+	bookingServiceUrl: "api/booking",
+
 	// User Service
 	userServiceUrl: "/api",
+
+	// Guest Service
+	guestServiceUrl: "/api",
 
 	// Notification Service
 	notificationServiceUrl: "/api",
 	notificationWebSocketUrl: "ws://localhost:8083/ws/notifications",
-	enableWebSocketNotifications: true, // Set to true when notification service is running
+	enableWebSocketNotifications: false, // Set to true when notification service is running
 
 	// Keycloak Configuration
 	keycloakUrl: "http://localhost:9080",
