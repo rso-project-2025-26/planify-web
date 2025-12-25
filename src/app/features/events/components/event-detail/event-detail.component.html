@@ -125,7 +125,7 @@
             [(ngModel)]="selectedUserId" 
             [disabled]="inviting"
             class="form-control">
-            <option value="">-- Select a member --</option>
+            <option value="">Select a member</option>
             <option *ngFor="let member of getAvailableMembers()" [value]="member.userId">
               {{ member.firstName }} {{ member.lastName }} ({{ member.username }})
             </option>

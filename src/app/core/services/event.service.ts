@@ -84,7 +84,7 @@ export class EventService {
             const invitedEventIds = invitations.map(inv => inv.eventId);
             
             // Get organization IDs where user can organize events
-            const myOrgIds = myOrgs.map(org => org.id);
+            const myOrgIds = (myOrgs || []).map(org => org.id);
             
             // Fetch events from user's organizations
             const orgEventRequests = myOrgIds.length > 0
