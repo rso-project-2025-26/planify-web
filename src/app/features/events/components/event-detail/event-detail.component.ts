@@ -21,7 +21,7 @@ export class EventDetailComponent implements OnInit {
   event?: Event;
   organization?: OrganizationSummary;
   guests: GuestList[] = [];
-  guestStatuses: Map<string, string> = new Map(); // userId -> RSVP status
+  guestStatuses: Map<string, string> = new Map();
   organizationMembers: OrganizationMember[] = [];
   
   loading = true;

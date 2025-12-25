@@ -1,8 +1,19 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { GuestService } from '@core/services/guest.service';
+import { EventService } from '@core/services/event.service';
+import { OrganizationService } from '@core/services/organization.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { Invitation, RsvpStatus } from '@core/models/guest.model';
+import { Event as EventModel } from '@core/models/event.model';
+import { OrganizationSummary } from '@core/models/organization.model';
+
+interface InvitationWithDetails extends Invitation {
+  event?: EventModel;
+  organizationName?: string;
+}
 
 @Component({
   selector: 'app-invitations-dropdown',
@@ -13,13 +24,16 @@ export class InvitationsDropdownComponent implements OnInit {
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
 
-  invitations: Invitation[] = [];
-  pendingInvitations: Invitation[] = [];
+  invitations: InvitationWithDetails[] = [];
+  pendingInvitations: InvitationWithDetails[] = [];
   loading = true;
   currentUserId?: string;
+  organizationsMap: Map<string, OrganizationSummary> = new Map();
 
   constructor(
     private guestService: GuestService,
+    private eventService: EventService,
+    private organizationService: OrganizationService,
     private authService: AuthService,
     private router: Router
   ) {}
@@ -29,7 +43,8 @@ export class InvitationsDropdownComponent implements OnInit {
   }
 
   loadInvitations(): void {
-    this.authService.getCurrentUserId().subscribe((userId: string | null) => {
+    this.authService.getDatabaseUserId().subscribe((userId: string | null) => {
+      
       if (!userId) {
         this.loading = false;
         return;
@@ -37,35 +52,83 @@ export class InvitationsDropdownComponent implements OnInit {
 
       this.currentUserId = userId;
       
-      this.guestService.getMyInvitations(userId).subscribe({
-        next: (invitations) => {
-          this.invitations = invitations || [];
-          
-          // Show only pending invitations in dropdown
-          this.pendingInvitations = this.invitations.filter(inv => inv.rsvpStatus === 'PENDING');
-          this.loading = false;
+      // Load organizations first
+      this.organizationService.getMyMemberships().subscribe({
+        next: (orgs) => {
+          orgs.forEach(org => this.organizationsMap.set(org.id, org));
+          this.loadInvitationsData(userId);
         },
-        error: (err) => {
-          console.error('Failed to load invitations:', err);
-          this.invitations = [];
-          this.pendingInvitations = [];
-          this.loading = false;
+        error: () => {
+          // Continue without organizations
+          this.loadInvitationsData(userId);
         }
       });
     });
   }
 
-  acceptInvitation(invitation: Invitation, event: Event): void {
+  loadInvitationsData(userId: string): void {    
+    this.guestService.getMyInvitations(userId).subscribe({
+      next: (invitations) => {
+        this.invitations = invitations || [];
+        
+        // Filter pending invitations
+        const pending = this.invitations.filter(inv => inv.rsvpStatus === 'PENDING');
+        
+        // Fetch event details for each invitation
+        if (pending.length > 0) {
+          this.loadEventDetails(pending);
+        } else {
+          this.pendingInvitations = [];
+          this.loading = false;
+        }
+      },
+      error: (err) => {
+        this.invitations = [];
+        this.pendingInvitations = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  loadEventDetails(invitations: InvitationWithDetails[]): void {
+    const requests = invitations.map(invitation => {
+      return this.eventService.getEventById(invitation.eventId).pipe(
+        map(event => ({
+          ...invitation,
+          event: event,
+          organizationName: this.organizationsMap.get(invitation.organizationId)?.name || 'Organization'
+        })),
+        catchError(err => {
+          return of({
+            ...invitation,
+            event: undefined,
+            organizationName: this.organizationsMap.get(invitation.organizationId)?.name || 'Organization'
+          });
+        })
+      );
+    });
+
+    forkJoin(requests).subscribe({
+      next: (invitationsWithDetails) => {
+        this.pendingInvitations = invitationsWithDetails;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.pendingInvitations = invitations; // Show without details
+        this.loading = false;
+      }
+    });
+  }
+
+  acceptInvitation(invitation: InvitationWithDetails, event: MouseEvent): void {
     event.stopPropagation();
     
     if (!this.currentUserId) return;
 
     this.guestService.acceptInvitation(invitation.eventId, this.currentUserId).subscribe({
       next: (updated) => {
-        // Update local state
         invitation.rsvpStatus = RsvpStatus.ACCEPTED;
         invitation.respondedAt = updated.respondedAt;
-        // Remove from pending list
         this.pendingInvitations = this.pendingInvitations.filter(inv => inv.eventId !== invitation.eventId);
       },
       error: (err) => {
@@ -75,17 +138,15 @@ export class InvitationsDropdownComponent implements OnInit {
     });
   }
 
-  declineInvitation(invitation: Invitation, event: Event): void {
+  declineInvitation(invitation: InvitationWithDetails, event: MouseEvent): void {
     event.stopPropagation();
     
     if (!this.currentUserId) return;
 
     this.guestService.declineInvitation(invitation.eventId, this.currentUserId).subscribe({
       next: (updated) => {
-        // Update local state
         invitation.rsvpStatus = RsvpStatus.DECLINED;
         invitation.respondedAt = updated.respondedAt;
-        // Remove from pending list
         this.pendingInvitations = this.pendingInvitations.filter(inv => inv.eventId !== invitation.eventId);
       },
       error: (err) => {
@@ -95,7 +156,7 @@ export class InvitationsDropdownComponent implements OnInit {
     });
   }
 
-  viewEvent(invitation: Invitation): void {
+  viewEvent(invitation: InvitationWithDetails): void {
     this.close.emit();
     this.router.navigate(['/events', invitation.eventId]);
   }

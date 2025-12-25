@@ -65,7 +65,7 @@ export class EventService {
     return this.apiService.get<Event[]>(`${this.endpoint}/past`);
   }
 
-  // Get My Events (Events I'm invited to OR Events from my organizations)
+  // Events I'm invited to or events from my organizations
   getMyEvents(): Observable<Event[]> {
     return this.authService.getCurrentUserId().pipe(
       switchMap(userId => {
@@ -159,7 +159,7 @@ export class EventService {
     return this.apiService.put<Event>(`${this.endpoint}/${id}/complete`, {});
   }
 
-  // Guest List Management (from event-manager)
+  // Guest List Management
   getEventGuests(eventId: string): Observable<GuestList[]> {
     return this.apiService.get<GuestList[]>(`${this.endpoint}/${eventId}/guests`);
   }

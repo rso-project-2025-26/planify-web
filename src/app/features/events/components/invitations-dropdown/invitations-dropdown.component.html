@@ -30,11 +30,20 @@
       
       <!-- Event Info -->
       <div class="invitation-info">
-        <h4 class="event-title">{{ invitation.eventId }}</h4>
+        <h4 class="event-title">{{ invitation.event?.title || 'Event' }}</h4>
         <div class="event-meta">
-          <span class="organization">{{ invitation.organizationId }}</span>
+          <span class="organization">{{ invitation.organizationName }}</span>
           <span class="separator">·</span>
-          <span class="date">{{ formatDate(invitation.invitationReceivedAt) }}</span>
+          <span class="date" *ngIf="invitation.event?.eventDate">
+            {{ formatDate(invitation.event?.eventDate) }}
+          </span>
+          <span class="date" *ngIf="!invitation.event?.eventDate">
+            {{ formatDate(invitation.invitationReceivedAt) }}
+          </span>
+        </div>
+        <div class="event-location" *ngIf="invitation.event?.locationName">
+          <span class="material-icons">place</span>
+          <span>{{ invitation.event?.locationName }}</span>
         </div>
       </div>
 

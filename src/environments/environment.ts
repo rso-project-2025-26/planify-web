@@ -7,6 +7,9 @@ export const environment = {
 	// User Service
 	userServiceUrl: "/api",
 
+	// Guest Service
+	guestServiceUrl: "/api",
+
 	// Notification Service
 	notificationServiceUrl: "/api",
 	notificationWebSocketUrl: "ws://localhost:8083/ws/notifications",

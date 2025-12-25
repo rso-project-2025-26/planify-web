@@ -309,7 +309,7 @@ export class EventListComponent implements OnInit {
    * Load pending invitations count
    */
   loadPendingInvitationsCount(): void {
-    this.authService.getCurrentUserId().subscribe(userId => {
+    this.authService.getDatabaseUserId().subscribe(userId => {
       if (!userId) return;
 
       this.guestService.getMyInvitations(userId).subscribe({
