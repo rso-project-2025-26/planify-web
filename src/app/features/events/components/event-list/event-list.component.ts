@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { EventService } from '../../../../core/services/event.service';
+import { GuestService } from '../../../../core/services/guest.service';
 import { Event, EventStatus, EventType } from '../../../../core/models/event.model';
 import { AuthService } from '../../../../auth/auth.service';
 
@@ -26,8 +27,13 @@ export class EventListComponent implements OnInit {
   // For dropdowns
   uniqueLocations: string[] = [];
   
+  // Invitations dropdown
+  showInvitationsDropdown = false;
+  pendingInvitationsCount = 0;
+  
   constructor(
     private eventService: EventService,
+    private guestService: GuestService,
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
@@ -38,6 +44,11 @@ export class EventListComponent implements OnInit {
     this.route.data.subscribe(data => {
       this.eventType = data['eventType'] || 'public';
       this.loadEvents();
+      
+      // Load pending invitations count for "My Events" tab
+      if (this.eventType === 'my-events') {
+        this.loadPendingInvitationsCount();
+      }
     });
   }
 
@@ -292,5 +303,39 @@ export class EventListComponent implements OnInit {
     return this.eventType === 'my-events' 
       ? 'Events you are attending or invited to'
       : 'Explore and participate in upcoming activities';
+  }
+
+  /**
+   * Load pending invitations count
+   */
+  loadPendingInvitationsCount(): void {
+    this.authService.getCurrentUserId().subscribe(userId => {
+      if (!userId) return;
+
+      this.guestService.getMyInvitations(userId).subscribe({
+        next: (invitations) => {
+          this.pendingInvitationsCount = invitations.filter(inv => inv.rsvpStatus === 'PENDING').length;
+        },
+        error: (err) => {
+          console.error('Failed to load pending invitations count:', err);
+        }
+      });
+    });
+  }
+
+  /**
+   * Toggle invitations dropdown
+   */
+  toggleInvitationsDropdown(): void {
+    this.showInvitationsDropdown = !this.showInvitationsDropdown;
+  }
+
+  /**
+   * Close invitations dropdown
+   */
+  closeInvitationsDropdown(): void {
+    this.showInvitationsDropdown = false;
+    // Reload count after closing (in case user accepted/declined)
+    this.loadPendingInvitationsCount();
   }
 }

@@ -91,7 +91,11 @@
         <!-- Attendees -->
         <div class="meta-item">
           <span class="material-icons">people</span>
-          <span>{{ event.currentAttendees }} / {{ event.maxAttendees || '∞' }} attendees</span>
+          <span>
+            {{ event.currentAttendees }}
+            {{ event.maxAttendees ? '/ ' + event.maxAttendees : '' }}
+            attendees
+          </span>
         </div>
       </div>
 

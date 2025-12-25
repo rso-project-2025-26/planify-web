@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .page-header {
@@ -229,4 +230,73 @@
 
 .btn-primary:hover {
   background: #2563eb;
+}
+
+.header-content {
+  width: 100%;
+}
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.invitations-badge-container {
+  position: relative;
+}
+
+.invitations-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .material-icons {
+    font-size: 20px;
+    color: #6b7280;
+  }
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #3b82f6;
+
+    .material-icons {
+      color: #3b82f6;
+    }
+  }
+
+  &.has-notifications {
+    border-color: #3b82f6;
+
+    .material-icons {
+      color: #3b82f6;
+    }
+  }
+}
+
+.badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 2px solid white;
 }

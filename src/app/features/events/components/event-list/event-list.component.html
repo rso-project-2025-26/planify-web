@@ -2,12 +2,34 @@
 
   <!-- Page Header -->
   <div class="page-header">
-    <h1 class="page-title">
-      {{ getPageTitle() }}
-    </h1>
-    <p class="subtitle">
-      {{ getPageSubtitle() }}
-    </p>
+    <div class="header-content">
+      <div class="title-with-badge">
+        <h1 class="page-title">
+          {{ getPageTitle() }}
+        </h1>
+        <!-- Invitations Badge (only on My Events page) -->
+        <div class="invitations-badge-container" *ngIf="eventType === 'my-events'">
+          <button 
+            class="invitations-badge" 
+            (click)="toggleInvitationsDropdown()"
+            [class.has-notifications]="pendingInvitationsCount > 0">
+            <span class="material-icons">notifications</span>
+            <span class="badge-count" *ngIf="pendingInvitationsCount > 0">
+              {{ pendingInvitationsCount }}
+            </span>
+          </button>
+          
+          <!-- Invitations Dropdown -->
+          <app-invitations-dropdown
+            [isOpen]="showInvitationsDropdown"
+            (close)="closeInvitationsDropdown()">
+          </app-invitations-dropdown>
+        </div>
+      </div>
+      <p class="subtitle">
+        {{ getPageSubtitle() }}
+      </p>
+    </div>
   </div>
 
   <!-- Filters Section -->

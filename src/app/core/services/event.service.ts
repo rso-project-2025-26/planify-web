@@ -6,7 +6,8 @@ import { GuestService } from './guest.service';
 import { AuthService } from '../../auth/auth.service';
 import { OrganizationService } from './organization.service';
 import { Event, EventStatus, CreateEventRequest, UpdateEventRequest } from '@core/models/event.model';
-import { GuestList } from '@core/models/guest.model';
+import { GuestList, Invitation } from '@core/models/guest.model';
+import { OrganizationSummary } from '@core/models/organization.model';
 import { HttpParams } from '@angular/common/http';
 
 @Injectable({
@@ -64,20 +65,21 @@ export class EventService {
     return this.apiService.get<Event[]>(`${this.endpoint}/past`);
   }
 
-  // Get My Events (Public + Invited/Accepted + From my organizations where I can organize)
+  // Get My Events (Events I'm invited to OR Events from my organizations)
   getMyEvents(): Observable<Event[]> {
     return this.authService.getCurrentUserId().pipe(
       switchMap(userId => {
         if (!userId) {
-          return this.getPublicEvents();
+          return of([]);
         }
         
         return combineLatest([
-          this.getPublicEvents(),
-          this.guestService.getMyAcceptedEvents(userId),
-          this.organizationService.getMyAdminOrganizations() // Get orgs where user can create events
+          this.guestService.getMyInvitations(userId), // All invitations (any status)
+          this.organizationService.getMyAdminOrganizations().pipe(
+            catchError(() => of([]))
+          )
         ]).pipe(
-          switchMap(([publicEvents, invitations, myOrgs]) => {
+          switchMap(([invitations, myOrgs]) => {
             // Get event IDs from invitations
             const invitedEventIds = invitations.map(inv => inv.eventId);
             
@@ -110,12 +112,12 @@ export class EventService {
             const allRequests = [...orgEventRequests, ...inviteEventRequests];
             
             if (allRequests.length === 0) {
-              return of(publicEvents);
+              return of([]);
             }
             
             return forkJoin(allRequests).pipe(
               map(results => {
-                // Flatten org events (they come as arrays) and filter invited events
+                // Flatten org events and filter invited events
                 const orgEvents = results
                   .slice(0, orgEventRequests.length)
                   .flat() as Event[];
@@ -123,8 +125,8 @@ export class EventService {
                   .slice(orgEventRequests.length)
                   .filter(e => e !== null) as Event[];
                 
-                // Combine public, invited, and organization events
-                const allEvents = [...publicEvents, ...invitedEvents, ...orgEvents];
+                // Combine invited and organization events
+                const allEvents = [...invitedEvents, ...orgEvents];
                 const uniqueEvents = Array.from(
                   new Map(allEvents.map(e => [e.id, e])).values()
                 );
@@ -139,7 +141,7 @@ export class EventService {
       }),
       catchError(err => {
         console.error('Failed to load my events:', err);
-        return this.getPublicEvents();
+        return of([]);
       })
     );
   }

@@ -10,6 +10,7 @@ import { EventDetailComponent } from './components/event-detail/event-detail.com
 import { EventFormComponent } from './components/event-form/event-form.component';
 import { EventCreateComponent } from './components/event-create/event-create.component';
 import { EventEditComponent } from './components/event-edit/event-edit.component';
+import { InvitationsDropdownComponent } from './components/invitations-dropdown/invitations-dropdown.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { EventEditComponent } from './components/event-edit/event-edit.component
     EventDetailComponent,
     EventFormComponent,
     EventCreateComponent,
-    EventEditComponent
+    EventEditComponent,
+    InvitationsDropdownComponent 
   ],
   imports: [
     CommonModule,

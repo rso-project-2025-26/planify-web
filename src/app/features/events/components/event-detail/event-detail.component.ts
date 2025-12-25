@@ -10,6 +10,7 @@ import { OrganizationSummary, OrganizationMember } from '@core/models/organizati
 import { DialogService } from '@shared/services/dialog.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-event-detail',
@@ -42,7 +43,8 @@ export class EventDetailComponent implements OnInit {
     private guestService: GuestService,
     private organizationService: OrganizationService,
     private authService: AuthService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -317,6 +319,6 @@ export class EventDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/events/public']);
+    this.location.back();
   }
 }
