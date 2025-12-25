@@ -36,6 +36,11 @@ export class EventDetailComponent implements OnInit {
   
   canEdit = false;
   currentUserId?: string;
+  currentUserDatabaseId?: string;
+
+  // Guest RSVP
+  isGuest = false;
+  myInvitation?: Invitation;
   
   // Invite guest form
   showInviteForm = false;
@@ -56,10 +61,16 @@ export class EventDetailComponent implements OnInit {
   ngOnInit(): void {
     const eventId = this.route.snapshot.paramMap.get('id')!;
     
-    // Get current user ID
     this.authService.getCurrentUserId().subscribe(userId => {
       this.currentUserId = userId || undefined;
-      this.loadEventDetails(eventId);
+      
+      this.authService.getDatabaseUserId().subscribe(dbUserId => {
+        this.currentUserDatabaseId = dbUserId || undefined;
+        this.loadEventDetails(eventId);
+        if (this.currentUserDatabaseId) {
+          this.checkIfGuest(eventId);
+        }
+      });
     });
   }
 
@@ -285,6 +296,61 @@ export class EventDetailComponent implements OnInit {
       case 'MAYBE': return 'status-maybe';
       default: return 'status-pending';
     }
+  }
+
+  checkIfGuest(eventId: string): void {
+    if (!this.currentUserDatabaseId) return;
+    
+    this.guestService.getMyInvitations(this.currentUserDatabaseId).subscribe({
+      next: (invitations) => {
+        this.myInvitation = invitations.find(inv => inv.eventId === eventId);
+        this.isGuest = !!this.myInvitation;
+      },
+      error: (err) => {
+        console.error('Failed to check guest status:', err);
+      }
+    });
+  }
+
+  acceptInvitation(): void {
+    if (!this.event?.id || !this.currentUserDatabaseId) return;
+    
+    this.guestService.acceptInvitation(this.event.id, this.currentUserDatabaseId).subscribe({
+      next: (updated) => {
+        this.myInvitation = updated;
+        alert('You have accepted the invitation!');
+      },
+      error: (err) => {
+        console.error('Failed to accept invitation:', err);
+        alert('Failed to accept invitation. Please try again.');
+      }
+    });
+  }
+
+  declineInvitation(): void {
+    if (!this.event?.id || !this.currentUserDatabaseId) return;
+    
+    this.guestService.declineInvitation(this.event.id, this.currentUserDatabaseId).subscribe({
+      next: (updated) => {
+        this.myInvitation = updated;
+        alert('You have declined the invitation.');
+      },
+      error: (err) => {
+        console.error('Failed to decline invitation:', err);
+        alert('Failed to decline invitation. Please try again.');
+      }
+    });
+  }
+
+  formatInviteDate(dateString?: string): string {
+    if (!dateString) return 'recently';
+    
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   editEvent(): void {

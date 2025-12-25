@@ -105,6 +105,38 @@
       </div>
     </div>
 
+    <!-- RSVP Section for Guests -->
+    <div class="rsvp-card" *ngIf="isGuest && myInvitation && !canEdit">
+      <div class="rsvp-main">
+        <div class="rsvp-left">
+          <div class="rsvp-header">
+            <h2>You're Invited!</h2>
+            <span class="rsvp-status" [ngClass]="getStatusClass(myInvitation.rsvpStatus)">
+              {{ myInvitation.rsvpStatus }}
+            </span>
+          </div>
+          <p class="rsvp-message">
+            Invited by {{ organization?.name || 'the organizer' }} • {{ formatInviteDate(myInvitation.invitationReceivedAt) }}
+          </p>
+          <div class="rsvp-responded" *ngIf="myInvitation.rsvpStatus !== 'PENDING' && myInvitation.respondedAt">
+            <span class="material-icons">check_circle</span>
+            Responded {{ formatInviteDate(myInvitation.respondedAt) }}
+          </div>
+        </div>
+        
+        <div class="rsvp-actions" *ngIf="myInvitation.rsvpStatus === 'PENDING'">
+          <button class="btn-accept" (click)="acceptInvitation()">
+            <span class="material-icons">check</span>
+            Accept
+          </button>
+          <button class="btn-decline" (click)="declineInvitation()">
+            <span class="material-icons">close</span>
+            Decline
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Guest List -->
     <div class="guests-card" *ngIf="canEdit">
       <div class="guests-header">
