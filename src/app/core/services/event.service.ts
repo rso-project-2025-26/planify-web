@@ -54,7 +54,9 @@ export class EventService {
   }
 
   getPublicEvents(): Observable<Event[]> {
-    return this.apiService.get<Event[]>(`${this.endpoint}/public`);
+    return this.apiService.get<Event[]>(`${this.endpoint}/public`).pipe(
+      map(events => events.filter(e => e.status === 'PUBLISHED'))
+    );
   }
 
   getUpcomingEvents(): Observable<Event[]> {

@@ -206,7 +206,15 @@ export class EventDetailComponent implements OnInit {
 
   getAvailableMembers(): OrganizationMember[] {
     const invitedUserIds = new Set(this.guests.map(g => g.userId));
-    return this.organizationMembers.filter(m => !invitedUserIds.has(m.userId));
+    
+    return this.organizationMembers.filter(m => {
+      if (invitedUserIds.has(m.userId)) return false;      
+      const hasOrganizerRole = m.roles.some(role => 
+        role === 'ORGANISER' || role === 'ORG_ADMIN'
+      );
+      
+      return !hasOrganizerRole;
+    });
   }
 
   toggleInviteForm(): void {
@@ -397,7 +405,7 @@ export class EventDetailComponent implements OnInit {
     
     this.dialogService.openConfirmDialog({
       title: 'Cancel Event',
-      message: 'Are you sure you want to cancel this event? Guests will be notified.',
+      message: 'Are you sure you want to cancel this event?',
       confirmText: 'Cancel Event',
       cancelText: 'Keep Event',
       isDangerous: true

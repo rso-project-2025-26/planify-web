@@ -76,6 +76,17 @@
           <option value="private">Private</option>
         </select>
       </div>
+
+      <div class="filter-group" *ngIf="eventType === 'my-events' && isOrganizer">
+        <label for="status">Status</label>
+        <select id="status" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+          <option value="all">All</option>
+          <option value="DRAFT">Draft</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="CANCELLED">Cancelled</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+      </div>
     </div>
     <p *ngIf="areFiltersActive()" class="clear-filters-text" (click)="clearFilters()">Clear all filters</p>
   </section>
@@ -98,7 +109,7 @@
       </div>
 
       <!-- Event Card -->
-      <div class="event-card" *ngFor="let event of filteredEvents" (click)="viewEvent(event.id!)">
+      <div class="event-card" *ngFor="let event of filteredEvents" (click)="viewEvent(event.id!)" [class.event-card--draft]="event.status === 'DRAFT'">
         <div class="event-content">
           <div class="event-header">
             <h3 class="event-title">{{ event.title }}</h3>

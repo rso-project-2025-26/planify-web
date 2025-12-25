@@ -17,12 +17,14 @@ export class EventListComponent implements OnInit {
   filteredEvents: Event[] = [];
   loading = false;
   error = '';
+  isOrganizer = false;
   
   // Filters
   searchTerm = '';
   selectedLocation = '';
   selectedDateRange: 'all' | 'today' | 'thisWeek' | 'thisMonth' = 'all';
   selectedEventType: 'any' | 'public' | 'private' = 'any';
+  selectedStatus: 'all' | 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED' = 'all';
   
   // For dropdowns
   uniqueLocations: string[] = [];
@@ -43,6 +45,11 @@ export class EventListComponent implements OnInit {
     // Read route data to determine which type of events to load
     this.route.data.subscribe(data => {
       this.eventType = data['eventType'] || 'public';
+
+      this.authService.hasAnyRole(['org_admin', 'organiser']).subscribe(hasRole => {
+        this.isOrganizer = hasRole;
+      });
+
       this.loadEvents();
       
       // Load pending invitations count for "My Events" tab
@@ -116,8 +123,12 @@ export class EventListComponent implements OnInit {
         this.selectedEventType === 'any' ||
         (this.selectedEventType === 'public' && event.eventType === "PUBLIC") ||
         (this.selectedEventType === 'private' && event.eventType === "PRIVATE");
+
+      const matchesStatus = 
+        this.selectedStatus === 'all' ||
+        event.status === this.selectedStatus; 
       
-      return matchesSearch && matchesLocation && matchesDateRange && matchesEventType;
+      return matchesSearch && matchesLocation && matchesDateRange && matchesEventType && matchesStatus;
     });
   }
 
@@ -126,7 +137,8 @@ export class EventListComponent implements OnInit {
       this.searchTerm.trim() !== '' ||
       this.selectedLocation !== '' ||
       this.selectedDateRange !== 'all' ||
-      this.selectedEventType !== 'any'
+      this.selectedEventType !== 'any' ||
+      this.selectedStatus !== 'all'
     );
   }
 
@@ -191,6 +203,7 @@ export class EventListComponent implements OnInit {
     this.selectedLocation = '';
     this.selectedDateRange = 'all';
     this.selectedEventType = 'any';
+    this.selectedStatus = 'all';
     this.applyFilters();
   }
 
