@@ -109,7 +109,13 @@
       </div>
 
       <!-- Event Card -->
-      <div class="event-card" *ngFor="let event of filteredEvents" (click)="viewEvent(event.id!)" [class.event-card--draft]="event.status === 'DRAFT'">
+      <div
+        class="event-card"
+        *ngFor="let event of filteredEvents"
+        (click)="viewEvent(event.id!)"
+        [class.event-card--draft]="event.status === 'DRAFT'"
+        [class.event-card--cancelled]="event.status === 'CANCELLED'"
+      >
         <div class="event-content">
           <div class="event-header">
             <h3 class="event-title">{{ event.title }}</h3>

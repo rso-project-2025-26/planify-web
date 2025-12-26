@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { OrganizationInvitation, OrganizationSummary, UserPendingJoinRequest } from '@core/models/organization.model';
 import { OrganizationService } from '@core/services/organization.service';
+import { DialogService } from '@shared/services/dialog.service';
 
 @Component({
   selector: 'app-my-organizations',
@@ -23,7 +24,10 @@ export class MyOrganizationsComponent implements OnInit, OnDestroy {
   private searchQuery$ = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  constructor(private orgService: OrganizationService) {}
+  constructor(
+    private orgService: OrganizationService,
+    private dialogService: DialogService
+  ) {}
 
   ngOnInit(): void {
     this.loadMemberships();
@@ -67,13 +71,26 @@ export class MyOrganizationsComponent implements OnInit, OnDestroy {
   }
 
   leave(orgId: string, orgName: string): void {
-    if (!confirm(`Leave organization ${orgName}?`)) return;
-    this.orgService.leaveOrganization(orgId).subscribe({
-      next: () => {
-        this.loadMemberships();
-        this.loadInvitations();
-        this.loadPendingJoinRequests();
-      },
+    this.dialogService.openConfirmDialog({
+      title: 'Leave Organization',
+      message: `Are you sure you want to leave organization ${orgName}?`,
+      confirmText: 'Leave',
+      cancelText: 'Cancel',
+      isDangerous: true
+    }).then(confirmed => {
+      if (!confirmed) return;
+
+      this.orgService.leaveOrganization(orgId).subscribe({
+        next: () => {
+          this.loadMemberships();
+          this.loadInvitations();
+          this.loadPendingJoinRequests();
+        },
+        error: (err) => {
+          console.error('Failed to leave organization:', err);
+          alert('Failed to leave organization. Please try again.');
+        }
+      });
     });
   }
 
