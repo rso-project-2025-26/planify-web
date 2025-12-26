@@ -294,7 +294,15 @@ export class EventListComponent implements OnInit {
   // Close invitations dropdown
   closeInvitationsDropdown(): void {
     this.showInvitationsDropdown = false;
-    // Reload count after closing (in case user accepted/declined)
+    // Reload count after closing
     this.loadPendingInvitationsCount();
+  }
+
+  onInvitationHandled(): void {
+    this.pendingInvitationsCount--;
+
+    if (this.pendingInvitationsCount < 0) {
+      this.pendingInvitationsCount = 0;
+    }
   }
 }

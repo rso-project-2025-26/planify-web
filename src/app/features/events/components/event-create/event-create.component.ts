@@ -5,7 +5,6 @@ import { switchMap, catchError } from 'rxjs/operators';
 import { EventService } from '@core/services/event.service';
 import { AuthService } from '../../../../auth/auth.service';
 import { OrganizationService } from '@core/services/organization.service';
-import { GuestService } from '@core/services/guest.service';
 import { OrganizationSummary } from '@core/models/organization.model';
 import { EventType } from '@core/models/event.model';
 
@@ -24,7 +23,6 @@ export class EventCreateComponent implements OnInit {
     private eventService: EventService,
     private authService: AuthService,
     private organizationService: OrganizationService,
-    private guestService: GuestService,
     public router: Router
   ) {}
 
@@ -89,38 +87,43 @@ export class EventCreateComponent implements OnInit {
 
             // If PUBLIC_WITHIN_ORG, auto-invite all org members
             if (visibility === 'PUBLIC_WITHIN_ORG') {
-              return this.organizationService.getMembers(eventData.organizationId).pipe(
-                switchMap(members => {
-                  // Invite all members except the organizer
-                  const inviteRequests = members
-                    .filter(member => member.userId !== userId)
-                    .map(member => 
-                      this.guestService.inviteGuest({
-                        eventId: createdEvent.id!,
-                        userId: member.userId,
-                        organizationId: eventData.organizationId
-                      }).pipe(
-                        catchError(err => {
-                          console.error(`Failed to invite user ${member.userId}:`, err);
-                          return of(null); // Continue even if one invite fails
-                        })
-                      )
-                    );
+              return this.eventService.publishEvent(createdEvent.id).pipe(
+                switchMap(publishedEvent => 
+                  this.organizationService.getMembers(eventData.organizationId).pipe(
+                    switchMap(members => {
+                      const membersToInvite = members.filter(member =>
+                        member.userId !== userId &&
+                        !member.roles.includes('ORGANISER') &&
+                        !member.roles.includes('ORG_ADMIN')
+                      );
 
-                  // Wait for all invites to complete
-                  if (inviteRequests.length > 0) {
-                    return forkJoin(inviteRequests).pipe(
-                      switchMap(() => of(createdEvent))
-                    );
-                  }
+                      const inviteRequests = membersToInvite.map(member =>
+                        this.eventService.inviteGuestToEvent(
+                          publishedEvent.id!,
+                          member.userId,
+                          eventData.organizationId
+                        ).pipe(
+                          catchError(err => {
+                            console.error(`Failed to invite user ${member.userId}:`, err);
+                            return of(null);
+                          })
+                        )
+                      );
 
-                  return of(createdEvent);
-                }),
-                catchError(err => {
-                  console.error('Failed to load org members for auto-invite:', err);
-                  // Still return the event, just log the error
-                  return of(createdEvent);
-                })
+                      if (inviteRequests.length > 0) {
+                        return forkJoin(inviteRequests).pipe(
+                          switchMap(() => of(publishedEvent))
+                        );
+                      }
+
+                      return of(publishedEvent);
+                    }),
+                    catchError(err => {
+                      console.error('Failed to load org members for auto-invite:', err);
+                      return of(publishedEvent);
+                    })
+                  )
+                )
               );
             }
 

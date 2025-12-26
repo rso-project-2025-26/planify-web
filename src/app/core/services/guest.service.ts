@@ -31,15 +31,6 @@ export class GuestService {
     return this.apiService.get<GuestList>(`${this.endpoint}/event/${eventId}/user/${userId}`);
   }
 
-  inviteGuest(request: InviteGuestRequest): Observable<GuestList> {
-    const params = new HttpParams()
-      .set('eventId', request.eventId)
-      .set('userId', request.userId)
-      .set('organizationId', request.organizationId);
-    
-    return this.apiService.post<GuestList>(`${this.endpoint}/invite`, null);
-  }
-
   removeGuest(eventId: string, userId: string): Observable<void> {
     return this.apiService.delete<void>(`${this.endpoint}/event/${eventId}/user/${userId}`);
   }

@@ -22,7 +22,8 @@
           <!-- Invitations Dropdown -->
           <app-invitations-dropdown
             [isOpen]="showInvitationsDropdown"
-            (close)="closeInvitationsDropdown()">
+            (close)="closeInvitationsDropdown()"
+            (invitationHandled)="onInvitationHandled()">
           </app-invitations-dropdown>
         </div>
       </div>
@@ -158,7 +159,7 @@
           </div>
 
           <p class="event-description" *ngIf="event.description">
-            {{ event.description }}
+            {{ event.description | slice:0:200 }}{{ event.description.length > 200 ? '...' : '' }}
           </p>
         </div>
       </div>
