@@ -4,6 +4,7 @@ import { EventService } from '@core/services/event.service';
 import { GuestService } from '@core/services/guest.service';
 import { OrganizationService } from '@core/services/organization.service';
 import { AuthService } from '../../../../auth/auth.service';
+import { ApiService } from '@core/services/api.service';
 import { Event } from '@core/models/event.model';
 import { GuestList, Invitation } from '@core/models/guest.model';
 import { OrganizationSummary, OrganizationMember } from '@core/models/organization.model';
@@ -11,6 +12,8 @@ import { DialogService } from '@shared/services/dialog.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Location } from '@angular/common';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 interface GuestWithDetails extends GuestList {
   username?: string;
@@ -36,17 +39,29 @@ export class EventDetailComponent implements OnInit {
   
   canEdit = false;
   currentUserId?: string;
+  currentUserDatabaseId?: string;
+
+  // Guest RSVP
+  isGuest = false;
+  myInvitation?: Invitation;
   
   // Invite guest form
   showInviteForm = false;
   selectedUserId = '';
   inviting = false;
+  showUserSearch = false;
+  userSearchQuery = '';
+  userSearchResults: any[] = [];
+  searchingUsers = false;
+  private userSearchQuery$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private eventService: EventService,
     private guestService: GuestService,
+    private apiService: ApiService,
     private organizationService: OrganizationService,
     private authService: AuthService,
     private dialogService: DialogService,
@@ -56,11 +71,29 @@ export class EventDetailComponent implements OnInit {
   ngOnInit(): void {
     const eventId = this.route.snapshot.paramMap.get('id')!;
     
-    // Get current user ID
     this.authService.getCurrentUserId().subscribe(userId => {
       this.currentUserId = userId || undefined;
-      this.loadEventDetails(eventId);
+      
+      this.authService.getDatabaseUserId().subscribe(dbUserId => {
+        this.currentUserDatabaseId = dbUserId || undefined;
+        this.loadEventDetails(eventId);
+        if (this.currentUserDatabaseId) {
+          this.checkIfGuest(eventId);
+        }
+      });
     });
+
+    this.userSearchQuery$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(query => this.performUserSearch(query));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadEventDetails(eventId: string): void {
@@ -71,21 +104,19 @@ export class EventDetailComponent implements OnInit {
         
         // Load organization members first, then check permissions and load guests
         if (this.event?.organizationId) {
-          this.organizationService.getMembers(this.event.organizationId).subscribe({
-            next: (members) => {
-              this.organizationMembers = members || [];
-              this.checkEditPermissions();
-              
-              // Load guests if user can edit
-              if (this.canEdit) {
+          this.checkEditPermissions();
+
+          if (this.canEdit) {
+            this.organizationService.getMembers(this.event.organizationId).subscribe({
+              next: (members) => {
+                this.organizationMembers = members || [];
                 this.loadGuests(eventId);
+              },
+              error: (err) => {
+                console.error('Failed to load organization members:', err);
               }
-            },
-            error: (err) => {
-              console.error('Failed to load organization members:', err);
-              this.checkEditPermissions();
-            }
-          });
+            });
+          }
         }
         
         this.loading = false;
@@ -195,7 +226,15 @@ export class EventDetailComponent implements OnInit {
 
   getAvailableMembers(): OrganizationMember[] {
     const invitedUserIds = new Set(this.guests.map(g => g.userId));
-    return this.organizationMembers.filter(m => !invitedUserIds.has(m.userId));
+    
+    return this.organizationMembers.filter(m => {
+      if (invitedUserIds.has(m.userId)) return false;      
+      const hasOrganizerRole = m.roles.some(role => 
+        role === 'ORGANISER' || role === 'ORG_ADMIN'
+      );
+      
+      return !hasOrganizerRole;
+    });
   }
 
   toggleInviteForm(): void {
@@ -224,6 +263,84 @@ export class EventDetailComponent implements OnInit {
       error: (err) => {
         console.error('Failed to invite guest:', err);
         alert('Failed to invite guest. Please try again.');
+        this.inviting = false;
+      }
+    });
+  }
+
+  toggleUserSearch(): void {
+    this.showUserSearch = !this.showUserSearch;
+    this.userSearchQuery = '';
+    this.userSearchResults = [];
+  }
+
+  onUserSearchInput(value: string): void {
+    this.userSearchQuery = value;
+    this.userSearchQuery$.next(value);
+  }
+
+  performUserSearch(query: string): void {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < 2) {
+      this.userSearchResults = [];
+      this.searchingUsers = false;
+      return;
+    }
+    
+    this.searchingUsers = true;
+    
+    // Call user service search endpoint
+    this.apiService.get<any[]>(`/users/search?username=${encodeURIComponent(trimmed)}`).subscribe({
+      next: (users) => {
+        // Filter out already invited users and organizers/admins
+        const invitedUserIds = new Set(this.guests.map(g => g.userId));
+        const memberIds = new Set(this.organizationMembers.map(m => m.userId));
+        
+        this.userSearchResults = users
+          .filter(u => !invitedUserIds.has(u.id))
+          .filter(u => !memberIds.has(u.id))
+          .slice(0, 5); // Top 5 results
+        
+        this.searchingUsers = false;
+      },
+      error: (err) => {
+        console.error('User search failed:', err);
+        this.searchingUsers = false;
+      }
+    });
+  }
+
+  inviteSearchedUser(user: any): void {
+    if (!this.event?.id || !this.event?.organizationId) return;
+
+    this.inviting = true;
+
+    this.eventService.inviteGuestToEvent(
+      this.event.id,
+      user.id,
+      this.event.organizationId
+    ).subscribe({
+      next: (guest) => {
+        this.guests.push({
+          ...guest,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username
+        });
+
+        this.guestStatuses.set(guest.userId, 'PENDING');
+
+        this.enrichGuestsWithUserDetails();
+
+        // Reset UI state
+        this.userSearchQuery = '';
+        this.userSearchResults = [];
+        this.showUserSearch = false;
+        this.inviting = false;
+      },
+      error: (err) => {
+        console.error('Failed to invite user:', err);
+        alert('Failed to invite user. Please try again.');
         this.inviting = false;
       }
     });
@@ -287,6 +404,61 @@ export class EventDetailComponent implements OnInit {
     }
   }
 
+  checkIfGuest(eventId: string): void {
+    if (!this.currentUserDatabaseId) return;
+    
+    this.guestService.getMyInvitations(this.currentUserDatabaseId).subscribe({
+      next: (invitations) => {
+        this.myInvitation = invitations.find(inv => inv.eventId === eventId);
+        this.isGuest = !!this.myInvitation;
+      },
+      error: (err) => {
+        console.error('Failed to check guest status:', err);
+      }
+    });
+  }
+
+  acceptInvitation(): void {
+    if (!this.event?.id || !this.currentUserDatabaseId) return;
+    
+    this.guestService.acceptInvitation(this.event.id, this.currentUserDatabaseId).subscribe({
+      next: (updated) => {
+        this.myInvitation = updated;
+        alert('You have accepted the invitation!');
+      },
+      error: (err) => {
+        console.error('Failed to accept invitation:', err);
+        alert('Failed to accept invitation. Please try again.');
+      }
+    });
+  }
+
+  declineInvitation(): void {
+    if (!this.event?.id || !this.currentUserDatabaseId) return;
+    
+    this.guestService.declineInvitation(this.event.id, this.currentUserDatabaseId).subscribe({
+      next: (updated) => {
+        this.myInvitation = updated;
+        alert('You have declined the invitation.');
+      },
+      error: (err) => {
+        console.error('Failed to decline invitation:', err);
+        alert('Failed to decline invitation. Please try again.');
+      }
+    });
+  }
+
+  formatInviteDate(dateString?: string): string {
+    if (!dateString) return 'recently';
+    
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   editEvent(): void {
     if (this.canEdit) {
       this.router.navigate(['/events', this.event!.id, 'edit']);
@@ -331,7 +503,7 @@ export class EventDetailComponent implements OnInit {
     
     this.dialogService.openConfirmDialog({
       title: 'Cancel Event',
-      message: 'Are you sure you want to cancel this event? Guests will be notified.',
+      message: 'Are you sure you want to cancel this event?',
       confirmText: 'Cancel Event',
       cancelText: 'Keep Event',
       isDangerous: true

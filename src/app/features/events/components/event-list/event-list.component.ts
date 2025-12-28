@@ -17,12 +17,14 @@ export class EventListComponent implements OnInit {
   filteredEvents: Event[] = [];
   loading = false;
   error = '';
+  isOrganizer = false;
   
   // Filters
   searchTerm = '';
   selectedLocation = '';
   selectedDateRange: 'all' | 'today' | 'thisWeek' | 'thisMonth' = 'all';
   selectedEventType: 'any' | 'public' | 'private' = 'any';
+  selectedStatus: 'all' | 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED' = 'all';
   
   // For dropdowns
   uniqueLocations: string[] = [];
@@ -43,6 +45,11 @@ export class EventListComponent implements OnInit {
     // Read route data to determine which type of events to load
     this.route.data.subscribe(data => {
       this.eventType = data['eventType'] || 'public';
+
+      this.authService.hasAnyRole(['org_admin', 'organiser']).subscribe(hasRole => {
+        this.isOrganizer = hasRole;
+      });
+
       this.loadEvents();
       
       // Load pending invitations count for "My Events" tab
@@ -52,9 +59,7 @@ export class EventListComponent implements OnInit {
     });
   }
 
-  /**
-   * Load events based on the event type (public or my-events)
-   */
+  // Load events based on the event type (public or my-events)
   loadEvents(): void {
     this.loading = true;
     this.error = '';
@@ -68,6 +73,7 @@ export class EventListComponent implements OnInit {
         this.events = events || [];
         this.filteredEvents = events || [];
         this.extractUniqueLocations();
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -80,9 +86,7 @@ export class EventListComponent implements OnInit {
     });
   }
 
-  /**
-   * Extract unique locations for filter dropdown
-   */
+  // Extract unique locations for filter dropdown
   extractUniqueLocations(): void {
     if (!this.events || this.events.length === 0) {
       this.uniqueLocations = [];
@@ -94,9 +98,7 @@ export class EventListComponent implements OnInit {
     this.uniqueLocations = [...new Set(locations)];
   }
 
-  /**
-   * Apply all filters
-   */
+  // Apply all filters
   applyFilters(): void {
     this.filteredEvents = this.events.filter(event => {
       // Search filter
@@ -117,7 +119,15 @@ export class EventListComponent implements OnInit {
         (this.selectedEventType === 'public' && event.eventType === "PUBLIC") ||
         (this.selectedEventType === 'private' && event.eventType === "PRIVATE");
       
-      return matchesSearch && matchesLocation && matchesDateRange && matchesEventType;
+      const matchesStatus = (() => {
+        if (this.selectedStatus === 'all') {
+          return event.status !== 'CANCELLED' && event.status !== 'COMPLETED';
+        } else {
+          return event.status === this.selectedStatus;
+        }
+      })();
+      
+      return matchesSearch && matchesLocation && matchesDateRange && matchesEventType && matchesStatus;
     });
   }
 
@@ -126,13 +136,12 @@ export class EventListComponent implements OnInit {
       this.searchTerm.trim() !== '' ||
       this.selectedLocation !== '' ||
       this.selectedDateRange !== 'all' ||
-      this.selectedEventType !== 'any'
+      this.selectedEventType !== 'any' ||
+      this.selectedStatus !== 'all'
     );
   }
 
-  /**
-   * Check if event matches selected date range
-   */
+  // Check if event matches selected date range
   matchesDateRange(event: Event): boolean {
     if (this.selectedDateRange === 'all') return true;
     
@@ -151,18 +160,14 @@ export class EventListComponent implements OnInit {
     }
   }
 
-  /**
-   * Check if two dates are the same day
-   */
+  // Check if two dates are the same day
   isSameDay(date1: Date, date2: Date): boolean {
     return date1.getFullYear() === date2.getFullYear() &&
            date1.getMonth() === date2.getMonth() &&
            date1.getDate() === date2.getDate();
   }
 
-  /**
-   * Check if date is in the same week
-   */
+  // Check if date is in the same week
   isThisWeek(date: Date, now: Date): boolean {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
@@ -175,66 +180,38 @@ export class EventListComponent implements OnInit {
     return date >= startOfWeek && date <= endOfWeek;
   }
 
-  /**
-   * Check if date is in the same month
-   */
+  // Check if date is in the same month
   isThisMonth(date: Date, now: Date): boolean {
     return date.getFullYear() === now.getFullYear() &&
            date.getMonth() === now.getMonth();
   }
 
-  /**
-   * Clear all filters
-   */
+  // Clear all filters
   clearFilters(): void {
     this.searchTerm = '';
     this.selectedLocation = '';
     this.selectedDateRange = 'all';
     this.selectedEventType = 'any';
+    this.selectedStatus = 'all';
     this.applyFilters();
   }
 
-  /**
-   * View event details
-   */
+  // View event details
   viewEvent(eventId: string): void {
     this.router.navigate(['/events', eventId]);
   }
 
-  /**
-   * RSVP to event (requires login)
-   */
-  rsvpToEvent(event: Event): void {
-    this.authService.isAuthenticated$.subscribe(isAuth => {
-      if (!isAuth) {
-        // Show message and redirect to login
-        alert('Please sign in to RSVP to this event');
-        this.authService.login();
-        return;
-      }
-      
-      // For now, navigate to event detail
-      this.viewEvent(event.id!);
-    });
-  }
-
-  /**
-   * Navigate to registration
-   */
+  // Navigate to registration
   goToRegister(): void {
     this.router.navigate(['/auth/register']);
   }
 
-  /**
-   * Navigate to login
-   */
+  // Navigate to login
   goToLogin(): void {
     this.authService.login();
   }
 
-  /**
-   * Format date for display
-   */
+  // Format date for display
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -247,9 +224,7 @@ export class EventListComponent implements OnInit {
     });
   }
 
-  /**
-   * Format short date
-   */
+  // Format short date
   formatShortDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -259,9 +234,7 @@ export class EventListComponent implements OnInit {
     });
   }
 
-  /**
-   * Format time
-   */
+  // Format time
   formatTime(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', {
@@ -270,9 +243,7 @@ export class EventListComponent implements OnInit {
     });
   }
 
-  /**
-   * Check if event is within 24 hours
-   */
+  // Check if event is within 24 hours
   isSoon(event: Event): boolean {
     const eventDate = new Date(event.eventDate);
     const now = new Date();
@@ -280,34 +251,26 @@ export class EventListComponent implements OnInit {
     return hoursDiff > 0 && hoursDiff <= 24;
   }
 
-  /**
-   * Check if event is full
-   */
+  // Check if event is full
   isEventFull(event: Event): boolean {
     return event.maxAttendees !== null && 
            event.maxAttendees !== undefined &&
            event.currentAttendees >= event.maxAttendees;
   }
 
-  /**
-   * Get page title based on event type
-   */
+  // Get page title based on event type
   getPageTitle(): string {
     return this.eventType === 'my-events' ? 'My Events' : 'Public Events';
   }
 
-  /**
-   * Get page subtitle based on event type
-   */
+  // Get page subtitle based on event type
   getPageSubtitle(): string {
     return this.eventType === 'my-events' 
       ? 'Events you are attending or invited to'
       : 'Explore and participate in upcoming activities';
   }
 
-  /**
-   * Load pending invitations count
-   */
+  // Load pending invitations count
   loadPendingInvitationsCount(): void {
     this.authService.getDatabaseUserId().subscribe(userId => {
       if (!userId) return;
@@ -323,19 +286,23 @@ export class EventListComponent implements OnInit {
     });
   }
 
-  /**
-   * Toggle invitations dropdown
-   */
+  // Toggle invitations dropdown
   toggleInvitationsDropdown(): void {
     this.showInvitationsDropdown = !this.showInvitationsDropdown;
   }
 
-  /**
-   * Close invitations dropdown
-   */
+  // Close invitations dropdown
   closeInvitationsDropdown(): void {
     this.showInvitationsDropdown = false;
-    // Reload count after closing (in case user accepted/declined)
+    // Reload count after closing
     this.loadPendingInvitationsCount();
+  }
+
+  onInvitationHandled(): void {
+    this.pendingInvitationsCount--;
+
+    if (this.pendingInvitationsCount < 0) {
+      this.pendingInvitationsCount = 0;
+    }
   }
 }

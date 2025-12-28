@@ -54,7 +54,9 @@ export class EventService {
   }
 
   getPublicEvents(): Observable<Event[]> {
-    return this.apiService.get<Event[]>(`${this.endpoint}/public`);
+    return this.apiService.get<Event[]>(`${this.endpoint}/public`).pipe(
+      map(events => events.filter(e => e.status === 'PUBLISHED'))
+    );
   }
 
   getUpcomingEvents(): Observable<Event[]> {
@@ -72,77 +74,63 @@ export class EventService {
         if (!userId) {
           return of([]);
         }
-        
-        return combineLatest([
-          this.guestService.getMyInvitations(userId), // All invitations (any status)
-          this.organizationService.getMyAdminOrganizations().pipe(
-            catchError(() => of([]))
-          )
-        ]).pipe(
-          switchMap(([invitations, myOrgs]) => {
-            // Get event IDs from invitations
-            const invitedEventIds = invitations.map(inv => inv.eventId);
-            
-            // Get organization IDs where user can organize events
-            const myOrgIds = myOrgs.map(org => org.id);
-            
-            // Fetch events from user's organizations
-            const orgEventRequests = myOrgIds.length > 0
-              ? myOrgIds.map(orgId => 
+
+        return this.authService.hasAnyRole(['org_admin', 'organiser']).pipe(
+          switchMap(isOrganizer => {
+            return combineLatest([
+              this.guestService.getMyInvitations(userId),
+              isOrganizer
+                ? this.organizationService.getMyAdminOrganizations()
+                : of([])
+            ]).pipe(
+              switchMap(([invitations, myOrgs]) => {
+                const invitedEventIds = invitations.map(inv => inv.eventId);
+                const myOrgIds = (myOrgs || []).map(org => org.id);
+
+                const orgEventRequests = myOrgIds.map(orgId =>
                   this.getEventsByOrganization(orgId).pipe(
-                    catchError(err => {
-                      console.error(`Failed to fetch events for org ${orgId}:`, err);
-                      return of([]);
-                    })
+                    catchError(() => of([]))
                   )
-                )
-              : [];
-            
-            // Fetch full event details for invited events
-            const inviteEventRequests = invitedEventIds.map(id => 
-              this.getEventById(id).pipe(
-                catchError(err => {
-                  console.error(`Failed to fetch event ${id}:`, err);
-                  return of(null);
-                })
-              )
-            );
-            
-            // Combine all requests
-            const allRequests = [...orgEventRequests, ...inviteEventRequests];
-            
-            if (allRequests.length === 0) {
-              return of([]);
-            }
-            
-            return forkJoin(allRequests).pipe(
-              map(results => {
-                // Flatten org events and filter invited events
-                const orgEvents = results
-                  .slice(0, orgEventRequests.length)
-                  .flat() as Event[];
-                const invitedEvents = results
-                  .slice(orgEventRequests.length)
-                  .filter(e => e !== null) as Event[];
-                
-                // Combine invited and organization events
-                const allEvents = [...invitedEvents, ...orgEvents];
-                const uniqueEvents = Array.from(
-                  new Map(allEvents.map(e => [e.id, e])).values()
                 );
-                // Sort by date
-                return uniqueEvents.sort((a, b) => 
-                  new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
+
+                const inviteEventRequests = invitedEventIds.map(id =>
+                  this.getEventById(id).pipe(
+                    catchError(() => of(null))
+                  )
+                );
+
+                const allRequests = [...orgEventRequests, ...inviteEventRequests];
+
+                if (allRequests.length === 0) {
+                  return of([]);
+                }
+
+                return forkJoin(allRequests).pipe(
+                  map(results => {
+                    const orgEvents = results
+                      .slice(0, orgEventRequests.length)
+                      .flat() as Event[];
+
+                    const invitedEvents = results
+                      .slice(orgEventRequests.length)
+                      .filter(Boolean) as Event[];
+
+                    const allEvents = [...invitedEvents, ...orgEvents];
+
+                    return Array.from(
+                      new Map(allEvents.map(e => [e.id, e])).values()
+                    ).sort((a, b) =>
+                      new Date(a.eventDate).getTime() -
+                      new Date(b.eventDate).getTime()
+                    );
+                  })
                 );
               })
             );
           })
         );
       }),
-      catchError(err => {
-        console.error('Failed to load my events:', err);
-        return of([]);
-      })
+      catchError(() => of([]))
     );
   }
 

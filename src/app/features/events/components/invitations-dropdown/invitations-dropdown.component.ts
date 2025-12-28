@@ -23,6 +23,7 @@ interface InvitationWithDetails extends Invitation {
 export class InvitationsDropdownComponent implements OnInit {
   @Input() isOpen = false;
   @Output() close = new EventEmitter<void>();
+  @Output() invitationHandled = new EventEmitter<void>();
 
   invitations: InvitationWithDetails[] = [];
   pendingInvitations: InvitationWithDetails[] = [];
@@ -130,6 +131,7 @@ export class InvitationsDropdownComponent implements OnInit {
         invitation.rsvpStatus = RsvpStatus.ACCEPTED;
         invitation.respondedAt = updated.respondedAt;
         this.pendingInvitations = this.pendingInvitations.filter(inv => inv.eventId !== invitation.eventId);
+        this.invitationHandled.emit();
       },
       error: (err) => {
         console.error('Failed to accept invitation:', err);
@@ -148,6 +150,7 @@ export class InvitationsDropdownComponent implements OnInit {
         invitation.rsvpStatus = RsvpStatus.DECLINED;
         invitation.respondedAt = updated.respondedAt;
         this.pendingInvitations = this.pendingInvitations.filter(inv => inv.eventId !== invitation.eventId);
+        this.invitationHandled.emit();
       },
       error: (err) => {
         console.error('Failed to decline invitation:', err);

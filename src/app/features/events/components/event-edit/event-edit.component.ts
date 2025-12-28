@@ -94,10 +94,15 @@ export class EventEditComponent implements OnInit {
       return;
     }
 
+    const payload = {
+      ...eventData,
+      status: this.event?.status ?? eventData.status
+    };
+
     this.submitting = true;
     this.error = '';
 
-    this.eventService.updateEvent(this.eventId, eventData).subscribe({
+    this.eventService.updateEvent(this.eventId, payload).subscribe({
       next: (updatedEvent) => {
         this.router.navigate(['/events', updatedEvent.id]);
       },

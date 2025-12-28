@@ -35,7 +35,8 @@ const routes: Routes = [
   },
   {
     path: ':id',
-    component: EventDetailComponent
+    component: EventDetailComponent,
+    canActivate: [authGuard(['uporabnik'])]
   }
 ];
 
