@@ -13,8 +13,13 @@ export class TokenInterceptor implements HttpInterceptor {
     const publicPaths = [
       '/api/auth/register',
       '/api/locations',
-      '/api/events/public'
+      '/api/events/public',
     ];
+
+    // POST /api/organizations je tudi public
+    if (req.method === 'POST' && req.url === '/api/organizations') {
+      return next.handle(req);
+    }
 
     const isPublic = publicPaths.some((p) => req.url.startsWith(p));
     const shouldAttach = !isPublic && req.url.startsWith('/api/');
