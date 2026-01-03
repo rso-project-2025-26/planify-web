@@ -5,7 +5,7 @@ export const environment = {
 	eventManagerServiceUrl: "/api",
 
 	// Booking Service (Production)
-	bookingServiceUrl: "api/booking",
+	bookingServiceUrl: "/api/booking",
 
 	// User Service (Production)
 	userServiceUrl: "/api",
@@ -15,11 +15,11 @@ export const environment = {
 
 	// Notification Service (Production)
 	notificationServiceUrl: "/api",
-	notificationWebSocketUrl: "wss://your-domain.com/ws/notifications",
+	notificationWebSocketUrl: "wss://4.182.10.195:30083/ws/notifications",
 	enableWebSocketNotifications: true,
 
 	// Keycloak Configuration (Production)
-	keycloakUrl: "https://ip.com",
+	keycloakUrl: "https://4.182.10.195:30080",
 	keycloakRealm: "planify",
 	keycloakClientId: "planify-frontend",
 
