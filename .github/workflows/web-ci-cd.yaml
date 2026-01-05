@@ -101,7 +101,7 @@ jobs:
             NAMESPACE="planify-dev"
           fi
           
-          IMAGE_TAG=$(echo "${{ github.ref_name }}" | sed 's/\//-/g')
+          IMAGE_TAG="${{ github.ref_name }}-$(echo ${{ github.sha }} | cut -c1-7)"
 
           helm upgrade --install planify-frontend ./helm/web \
             --namespace ${NAMESPACE} \
