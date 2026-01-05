@@ -299,6 +299,6 @@ export class RegisterComponent implements OnInit {
 	 * Navigate to login page
 	 */
 	goToLogin(): void {
-		this.router.navigate(["/login"]);
+		this.authService.login();
 	}
 }
