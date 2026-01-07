@@ -19,7 +19,7 @@ export const environment = {
 	enableWebSocketNotifications: true,
 
 	// Keycloak Configuration (via Ingress)
-	keycloakUrl: "http://keycloak.131.189.20.56.nip.io",
+	keycloakUrl: "http://131.189.20.56/keycloak",
 	keycloakRealm: "planify",
 	keycloakClientId: "planify-frontend",
 
