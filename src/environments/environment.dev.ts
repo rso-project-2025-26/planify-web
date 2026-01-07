@@ -15,11 +15,11 @@ export const environment = {
 
 	// Notification Service
 	notificationServiceUrl: "/api",
-	notificationWebSocketUrl: "ws://131.189.20.56/ws/notifications",
+	notificationWebSocketUrl: "ws://4.185.235.181/ws/notifications",
 	enableWebSocketNotifications: true,
 
 	// Keycloak Configuration (via Ingress)
-	keycloakUrl: "http://131.189.20.56/keycloak",
+	keycloakUrl: "https://4.185.235.181/keycloak",
 	keycloakRealm: "planify",
 	keycloakClientId: "planify-frontend",
 
