@@ -10,7 +10,6 @@ export const authConfig: OpenIdConfiguration = {
 	scope: "openid profile email",
 	silentRenew: false,
 	useRefreshToken: true,
-	disablePkce: true,
 	maxIdTokenIatOffsetAllowedInSeconds: 600,
 	triggerAuthorizationResultEvent: true,
 };
