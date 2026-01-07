@@ -12,4 +12,5 @@ export const authConfig: OpenIdConfiguration = {
 	useRefreshToken: true,
 	maxIdTokenIatOffsetAllowedInSeconds: 600,
 	triggerAuthorizationResultEvent: true,
+	disablePkce: true,  // Disable PKCE for HTTP
 };
