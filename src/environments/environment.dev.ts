@@ -15,7 +15,7 @@ export const environment = {
 
 	// Notification Service
 	notificationServiceUrl: "/api",
-	notificationWebSocketUrl: "ws://4.185.235.181.nip.io/ws/notifications",
+	notificationWebSocketUrl: "wss://4.185.235.181.nip.io/ws/notifications",
 	enableWebSocketNotifications: true,
 
 	// Keycloak Configuration (via Ingress)
