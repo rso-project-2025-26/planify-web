@@ -5,6 +5,9 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   role?: string;
+  mobile?: string;
+  consentSms?: boolean;
+  consentEmail?: boolean;
 }
 
 export interface RegisterResponse {
@@ -32,4 +35,13 @@ export interface LoginResponse {
   refresh_token: string;
   expires_in: number;
   token_type: string;
+}
+
+export interface Organization {
+  name: string;
+  slug: string;
+  business: boolean;
+  descriptiona?: string;
+  email: string;
+  password: string;
 }

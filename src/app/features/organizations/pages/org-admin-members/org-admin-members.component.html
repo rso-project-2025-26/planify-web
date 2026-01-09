@@ -1,0 +1,164 @@
+<div class="admin-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Manage Members</h1>
+      <p class="subtitle" *ngIf="activeOrg">{{ activeOrg.name }}</p>
+    </div>
+    <button class="btn-create" (click)="openInvite()" *ngIf="activeOrg">
+      <span class="material-icons">person_add</span>
+      Invite User
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+  <div *ngIf="activeOrg && !loading; else noOrg">
+    
+    <!-- Pending Join Requests -->
+    <section class="requests-section" *ngIf="joinRequests.length > 0">
+      <div class="section-header">
+        <h2>Pending Join Requests</h2>
+        <span class="badge badge-red">{{ joinRequests.length }}</span>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Requested</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let req of joinRequests">
+              <td>
+                <div class="user-info">
+                  <span class="user-name">{{ req.user.username }}</span>
+                  <span class="user-meta">ID: {{ req.user.id }}</span>
+                </div>
+              </td>
+              <td>{{ req.createdAt | date:'short' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-primary btn-sm" (click)="acceptJoin(req)">Accept</button>
+                  <button class="btn-danger btn-sm" (click)="rejectJoin(req)">Reject</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Members List -->
+    <section class="members-section">
+      <div class="section-header">
+        <h2>Organization Members</h2>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Roles</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let member of members">
+              <td>
+                <div class="user-info">
+                  <span class="user-name">{{ member.firstName }} {{ member.lastName }}</span>
+                  <span class="user-meta">{{ member.username }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="role-chips">
+                  <label class="role-chip" *ngFor="let role of roles">
+                    <input 
+                      type="checkbox" 
+                      [checked]="roleSelections[member.userId].has(role)" 
+                      (change)="toggleRole(member, role)"
+                    />
+                    <span>{{ role }}</span>
+                  </label>
+                </div>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn-secondary btn-sm" (click)="saveRoles(member)">Save</button>
+                  <span class="success-icon material-icons" *ngIf="recentlySaved.has(member.userId)">check_circle</span>
+                  <button class="btn-danger btn-sm" (click)="remove(member)">Remove</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <ng-template #noOrg>
+    <div class="no-organization" *ngIf="!loading">
+      <span class="material-icons">admin_panel_settings</span>
+      <p>You are not an admin of any organization yet.</p>
+    </div>
+  </ng-template>
+
+  <!-- Invite Modal -->
+  <div class="modal-backdrop" *ngIf="inviteOpen" (click)="closeInvite()"></div>
+  <div class="modal-container" *ngIf="inviteOpen">
+    <div class="modal-header">
+      <h2>Invite User</h2>
+      <button class="modal-close" (click)="closeInvite()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    
+    <div class="modal-content">
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input 
+          type="text" 
+          placeholder="Search by username..." 
+          [(ngModel)]="searchUsername" 
+          (keyup.enter)="searchUsers()"
+          autofocus
+        />
+        <button class="btn-create" (click)="searchUsers()" [disabled]="searching">
+          Search
+        </button>
+      </div>
+
+      <div class="search-results" *ngIf="userResults && userResults.length > 0">
+        <div class="result-item" *ngFor="let user of userResults">
+          <div class="result-info">
+            <h4>{{ user.username }}</h4>
+            <p>{{ user.email }}</p>
+          </div>
+          <div class="result-action">
+            <ng-container [ngSwitch]="getStatus(user)">
+              <span class="status-badge status-success" *ngSwitchCase="'Already a member'">Member</span>
+              <span class="status-badge status-warning" *ngSwitchCase="'Invitation pending'">Invited</span>
+              <span class="status-badge status-warning" *ngSwitchCase="'Join request pending'">Pending</span>
+              <button class="btn-primary btn-sm" *ngSwitchDefault (click)="invite(user.username, user.id)" [disabled]="!canInvite(user)">
+                Invite
+              </button>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-results" *ngIf="!searching && userResults?.length === 0 && searchUsername">
+        <p>No users found matching "{{ searchUsername }}"</p>
+      </div>
+    </div>
+  </div>
+
+</div>

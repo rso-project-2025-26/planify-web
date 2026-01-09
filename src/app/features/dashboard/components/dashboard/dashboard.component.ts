@@ -66,7 +66,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  viewEvent(eventId: number): void {
+  viewEvent(eventId: string): void {
     this.router.navigate(['/events', eventId]);
   }
 

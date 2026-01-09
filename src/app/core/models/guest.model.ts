@@ -5,31 +5,28 @@ export enum RsvpStatus {
   MAYBE = 'MAYBE'
 }
 
-export enum GuestRole {
-  ATTENDEE = 'ATTENDEE',
-  SPEAKER = 'SPEAKER',
-  VIP = 'VIP',
-  STAFF = 'STAFF'
+export interface GuestList {
+  id?: string;
+  eventId: string;
+  userId: string;
+  organizationId: string;
+  invitedAt?: string;
 }
 
-export interface GuestList {
-  id?: number;
-  eventId: number;
-  userId: number;
+export interface Invitation {
+  id?: string;
+  eventId: string;
+  userId: string;
+  organizationId: string;
   rsvpStatus: RsvpStatus;
-  role: GuestRole;
-  invitedAt?: string;
   respondedAt?: string;
-  checkedIn: boolean;
-  checkedInAt?: string;
-  notes?: string;
+  invitationReceivedAt?: string;
 }
 
 export interface InviteGuestRequest {
-  eventId: number;
-  userId: number;
-  role?: GuestRole;
-  notes?: string;
+  eventId: string;
+  userId: string;
+  organizationId: string;
 }
 
 export interface UpdateRsvpRequest {

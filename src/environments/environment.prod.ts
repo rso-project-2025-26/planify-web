@@ -1,18 +1,17 @@
 export const environment = {
-  production: true,
-  
-  // Event Manager Service (Production)
-  eventManagerServiceUrl: 'https://ip/api',
-  
-  // User Service (Production)
-  userServiceUrl: 'https://ip/user-api',
-  
-  // Keycloak Configuration (Production)
-  keycloakUrl: 'https://ip.com',
-  keycloakRealm: 'planify',
-  keycloakClientId: 'planify-frontend',
+    production: true,
+    eventManagerServiceUrl: "/api",
+    bookingServiceUrl: "/api/booking",
+    userServiceUrl: "/api",
+    guestServiceUrl: "/api",
+    notificationServiceUrl: "/api",
+    notificationWebSocketUrl: "wss://131.189.78.13.nip.io/ws/notifications",
+    enableWebSocketNotifications: true,
 
-  // App Info
-  appName: 'Planify',
-  version: '1.0.0'
+    keycloakUrl: "https://131.189.78.13.nip.io/keycloak",
+    keycloakRealm: "planify",
+    keycloakClientId: "planify-frontend",
+    
+    appName: "Planify",
+    version: "1.0.0",
 };

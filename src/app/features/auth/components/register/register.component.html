@@ -17,9 +17,23 @@
 
     <!-- Registration Form -->
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <!-- Account Type Toggle -->
+      <div class="form-group">
+        <label class="form-label">Account Type <span class="required">*</span></label>
+        <div class="form-row" role="radiogroup" aria-label="Account type">
+          <label class="radio-option">
+            <input type="radio" formControlName="accountType" value="guest" />
+            <span>Personal (guest)</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" formControlName="accountType" value="organization" />
+            <span>Organization</span>
+          </label>
+        </div>
+      </div>
       
-      <!-- Name Fields (Side by Side) -->
-      <div class="form-row">
+      <!-- User Fields: shown for Personal (guest) -->
+      <div class="form-row" *ngIf="registerForm.value.accountType === 'guest'">
         <div class="form-group">
           <label for="firstName" class="form-label">
             First Name <span class="required">*</span>
@@ -61,8 +75,8 @@
         </div>
       </div>
 
-      <!-- Email -->
-      <div class="form-group">
+      <!-- Email (User) -->
+      <div class="form-group" *ngIf="registerForm.value.accountType === 'guest'">
         <label for="email" class="form-label">
           Email <span class="required">*</span>
         </label>
@@ -82,8 +96,27 @@
         </div>
       </div>
 
+      <!-- Mobile Phone (User) -->
+      <div class="form-group" *ngIf="registerForm.value.accountType === 'guest'">
+        <label for="mobile" class="form-label">
+          Mobile Phone
+        </label>
+        <input
+          type="tel"
+          id="mobile"
+          formControlName="mobile"
+          class="form-input"
+          [class.error]="hasError('mobile', 'pattern')"
+          placeholder="+386 31 123 456"
+        />
+        <div class="form-hint">Include country code if possible</div>
+        <div class="error-message" *ngIf="hasError('mobile', 'pattern')">
+          Please enter a valid phone number
+        </div>
+      </div>
+
       <!-- Username -->
-      <div class="form-group">
+      <div class="form-group" *ngIf="registerForm.value.accountType === 'guest'">
         <label for="username" class="form-label">
           Username <span class="required">*</span>
         </label>
@@ -106,6 +139,84 @@
           Username can only contain letters, numbers, underscores, and hyphens
         </div>
       </div>
+
+      <div *ngIf="registerForm.value.accountType === 'organization'" class="org-section">
+
+  <div class="form-row two-columns">
+    <div class="form-group">
+      <label for="orgName" class="form-label">
+        Organization Name <span class="required">*</span>
+      </label>
+      <input
+        id="orgName"
+        type="text"
+        class="form-input"
+        formControlName="orgName"
+        [class.error]="hasError('orgName', 'required') || hasError('orgName', 'minlength')"
+        placeholder="Planify business Org"
+      />
+      <div class="error-message" *ngIf="hasError('orgName', 'required')">Organization name is required</div>
+    </div>
+
+    <div class="form-group">
+      <label for="orgSlug" class="form-label">
+        Slug <span class="required">*</span>
+      </label>
+      <input
+        id="orgSlug"
+        type="text"
+        class="form-input"
+        formControlName="orgSlug"
+        [class.error]="hasError('orgSlug', 'required') || hasError('orgSlug', 'pattern')"
+        placeholder="planify_business_11"
+      />
+      <div class="form-hint">Lowercase letters, numbers and underscores</div>
+      <div class="error-message" *ngIf="hasError('orgSlug', 'required')">Slug is required</div>
+      <div class="error-message" *ngIf="hasError('orgSlug', 'pattern')">Slug can contain lowercase letters, numbers, and underscores</div>
+    </div>
+  </div>
+
+  <!-- Business Checkbox -->
+  <div class="form-group">
+    <label class="form-label" for="orgBusiness">Business</label>
+    <label class="checkbox-inline">
+      <input type="checkbox" id="orgBusiness" formControlName="orgBusiness" />
+      <span>Mark as business organization</span>
+      <span class="info-icon" tabindex="0" aria-label="Business info">
+        i
+        <span class="tooltip">Business organizations may have additional features and billing.</span>
+      </span>
+    </label>
+  </div>
+
+  <div class="form-group">
+    <label for="orgDescriptiona" class="form-label">Description</label>
+    <textarea
+      id="orgDescriptiona"
+      rows="3"
+      class="form-input"
+      formControlName="orgDescriptiona"
+      placeholder="Business Planify Org"
+    ></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="orgEmail" class="form-label">
+      Organization Email <span class="required">*</span>
+    </label>
+    <input
+      id="orgEmail"
+      type="email"
+      class="form-input"
+      formControlName="orgEmail"
+      [class.error]="hasError('orgEmail', 'required') || hasError('orgEmail', 'email')"
+      placeholder="admin@planify-b11-org.com"
+    />
+    <div class="error-message" *ngIf="hasError('orgEmail', 'required')">Email is required</div>
+    <div class="error-message" *ngIf="hasError('orgEmail', 'email')">Please enter a valid email address</div>
+  </div>
+
+</div>
 
       <!-- Password -->
       <div class="form-group">
@@ -202,6 +313,31 @@
         </div>
       </div>
 
+      <!-- Consent for notifications (User) -->
+      <!-- Consent: SMS -->
+      <div class="form-group consent-group" *ngIf="registerForm.value.accountType === 'guest'">
+        <label class="checkbox-styled">
+          <input type="checkbox" id="consentSms" formControlName="consentSms" />
+          <span class="checkmark"></span>
+          <div class="checkbox-text">
+            <span class="checkbox-title">SMS Notifications</span>
+            <span class="checkbox-description">I agree to receive SMS remindrs about upcoming events
+            </span>
+          </div>
+        </label>
+      </div>
+      <!-- Consent: Email -->
+      <div class="form-group consent-group" *ngIf="registerForm.value.accountType === 'guest'">
+        <label class="checkbox-styled">
+          <input type="checkbox" id="consentEmail" formControlName="consentEmail" />
+          <span class="checkmark"></span>
+          <div class="checkbox-text">
+            <span class="checkbox-title">Email Notifications</span>
+            <span class="checkbox-description">I agree to receive emails about upcoming events and updates</span>
+          </div>
+        </label>
+      </div>
+
       <!-- Submit Button -->
       <button 
         type="submit" 
@@ -209,13 +345,13 @@
         [disabled]="loading"
         [class.loading]="loading"
       >
-        <span *ngIf="!loading">Create Account</span>
+        <span *ngIf="!loading">{{ registerForm.value.accountType === 'organization' ? 'Create Organization' : 'Create Account' }}</span>
         <span *ngIf="loading" class="loading-spinner">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"/>
             <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round"/>
           </svg>
-          Creating account...
+          {{ registerForm.value.accountType === 'organization' ? 'Creating organization...' : 'Creating account...' }}
         </span>
       </button>
 

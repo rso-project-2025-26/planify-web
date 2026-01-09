@@ -1,10 +1,14 @@
-.header {
-  background: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+:host {
   position: sticky;
   top: 0;
   z-index: 1000;
-  border-bottom: 1px solid #e5e7eb;
+  display: block;
+}
+
+.header {
+  background: var(--header-bg);
+  box-shadow: var(--header-shadow);
+  border-bottom: 1px solid var(--header-border);
 }
 
 .header-container {
@@ -22,18 +26,17 @@
   gap: 0.75rem;
   cursor: pointer;
   transition: opacity 0.2s;
-}
 
-.logo-icon {
-  width: 32px;
-  height: 32px;
-  color: #3b82f6;
-}
+  .logo-icon {
+    font-size: 32px;
+    color: var(--logo-icon);
+  }
 
-.logo-text {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1f2937;
+  .logo-text {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--logo-text);
+  }
 }
 
 .nav-desktop {
@@ -47,7 +50,7 @@
 }
 
 .nav-link {
-  color: #6b7280;
+  color: var(--nav-link);
   text-decoration: none;
   font-weight: 500;
   cursor: pointer;
@@ -56,36 +59,87 @@
   border-bottom: 2px solid transparent;
 
   &:hover {
-    color: #3b82f6;
+    color: var(--nav-link-hover);
   }
 
   &.active {
-    color: #3b82f6;
-    border-bottom-color: #3b82f6;
+    color: var(--nav-link-active);
+    border-bottom-color: var(--nav-link-active);
   }
 }
 
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  border: none;
+.btn-primary,
+.btn-secondary {
   padding: 0.625rem 1.25rem;
   border-radius: 0.5rem;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  transition: background 0.2s;
-  font-size: 1rem;
+  box-shadow: var(--btn-shadow);
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
+  border: none;
+  margin-right: -1.5rem;
 
   &:hover {
-    background: #2563eb;
+    background: var(--btn-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--btn-secondary-color);
+  border: 2px solid var(--btn-secondary-border);
+  padding: calc(0.625rem - 2px) calc(1.25rem - 2px);
+
+  &:hover {
+    background: var(--btn-primary-hover);
+    color: var(--btn-primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+  }
+}
+
+.btn-create {
+  background: var(--btn-create-bg);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: var(--btn-shadow);
+  transition: all 0.2s ease-in-out;
+
+  .material-icons {
+    font-size: 20px;
+    vertical-align: middle;
   }
 
-  .icon {
-    width: 20px;
-    height: 20px;
+  &:hover {
+    background: var(--btn-create-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--btn-shadow);
   }
 }
 
@@ -95,12 +149,7 @@
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  color: #1f2937;
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
+  color: var(--menu-toggle-color);
 
   @media (max-width: 768px) {
     display: block;
@@ -112,8 +161,8 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem 1.5rem;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
+  background: var(--nav-mobile-bg);
+  border-top: 1px solid var(--nav-mobile-border-top);
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-in-out;
@@ -128,7 +177,7 @@
 }
 
 .nav-link-mobile {
-  color: #374151;
+  color: var(--nav-link-mobile);
   text-decoration: none;
   padding: 0.75rem;
   border-radius: 0.375rem;
@@ -136,13 +185,13 @@
   transition: background 0.2s;
 
   &:hover {
-    background: #e5e7eb;
+    background: var(--nav-link-mobile-hover-bg);
   }
 }
 
 .btn-primary-mobile {
-  background: #3b82f6;
-  color: white;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-color);
   border: none;
   padding: 0.75rem;
   border-radius: 0.375rem;
@@ -152,6 +201,19 @@
   transition: background 0.2s;
 
   &:hover {
-    background: #2563eb;
+    background: var(--btn-primary-hover);
   }
+}
+
+/* Theme toggle button (small helper styles) */
+.theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  color: var(--menu-toggle-color);
 }

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: planify-frontend
+description: A Helm chart for Planify Frontend (Angular)
+type: application
+version: 0.1.0
+appVersion: "1.0"

@@ -1,0 +1,133 @@
+<div class="organizations-container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">My Organizations</h1>
+    <p class="subtitle">Organizations you're a member of</p>
+  </div>
+
+  <!-- Loading -->
+  <app-loading-spinner *ngIf="loading"></app-loading-spinner>
+
+  <!-- Pending Invitations Section -->
+  <section class="invitations-section" *ngIf="invitations.length > 0 && !loading">
+    <div class="section-header">
+      <h2>Pending Invitations</h2>
+      <span class="badge badge-red">{{ invitations.length }}</span>
+    </div>
+    
+    <div class="invitations-grid">
+      <div class="invitation-card" *ngFor="let inv of invitations">
+        <div class="card-content">
+          <div class="org-info">
+            <h3 class="org-name">{{ inv.organization.name }}</h3>
+            <p class="org-slug">{{ inv.organization.slug }}</p>
+          </div>
+          <div class="invitation-meta">
+            <span class="meta-item">
+              <span class="material-icons">schedule</span>
+              {{ inv.createdAt | date:'short' }}
+            </span>
+          </div>
+          <div class="card-actions">
+            <button class="btn-primary" (click)="acceptInvitation(inv)">Accept</button>
+            <button class="btn-secondary" (click)="declineInvitation(inv)">Decline</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Organizations Section -->
+  <section class="organizations-section" *ngIf="!loading">
+    <div class="section-header section-header--actions">
+      <h2>Your Organizations</h2>
+      <button class="btn-create" (click)="openJoin()">
+        <span class="material-icons">search</span>
+        Find Organization
+      </button>
+    </div>
+
+    <div class="organizations-grid" *ngIf="memberships.length > 0; else noOrgs">
+      <div class="org-card" *ngFor="let org of memberships">
+        <div class="card-content">
+          <div class="org-header">
+            <h3 class="org-title">{{ org.name }}</h3>
+          </div>
+          <div class="org-meta">
+            <span class="meta-item">
+              <span class="material-icons">link</span>
+              {{ org.slug }}
+            </span>
+          </div>
+          <div class="card-actions">
+            <button class="btn-danger" (click)="leave(org.id, org.name)">Leave</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noOrgs>
+      <div class="no-organizations">
+        <p>You are not a member of any organization yet.</p>
+        <button class="btn-primary" (click)="openJoin()">Find Organizations</button>
+      </div>
+    </ng-template>
+  </section>
+
+  <!-- Join Modal -->
+  <div class="modal-backdrop" *ngIf="joinOpen" (click)="closeJoin()"></div>
+  <div class="modal-container" *ngIf="joinOpen">
+    <div class="modal-header">
+      <h2>Find Organizations</h2>
+      <button class="modal-close" (click)="closeJoin()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    
+    <div class="modal-content">
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input 
+          type="text" 
+          placeholder="Start typing to search..." 
+          [value]="searchQuery"
+          (input)="onSearchInput($any($event.target).value)"
+          autofocus
+        />
+        <span class="loading-indicator" *ngIf="searching">
+          <span class="material-icons spinning">refresh</span>
+        </span>
+      </div>
+
+      <div class="search-results" *ngIf="orgResults && orgResults.length > 0">
+        <div class="result-item" *ngFor="let org of orgResults">
+          <div class="result-info">
+            <h4>{{ org.name }}</h4>
+            <p>{{ org.slug }}</p>
+          </div>
+          <div class="result-action">
+            <ng-container [ngSwitch]="getOrgStatus(org)">
+              <span class="status-badge status-success" *ngSwitchCase="'Already a member'">Member</span>
+              <span class="status-badge status-warning" *ngSwitchCase="'Invitation pending'">Invited</span>
+              <span class="status-badge status-warning" *ngSwitchCase="'Join request pending'">Pending</span>
+              <button class="btn-primary btn-sm" *ngSwitchDefault (click)="requestJoin(org)" [disabled]="!canRequestJoin(org)">
+                Request Join
+              </button>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-results" *ngIf="!searching && orgResults?.length === 0 && searchQuery.trim()">
+        <p>No organizations found matching "{{ searchQuery }}"</p>
+      </div>
+
+      <div class="search-hint" *ngIf="!searchQuery && !orgResults?.length">
+        <span class="material-icons">info</span>
+        <p>Type to search for organizations by name or slug</p>
+      </div>
+    </div>
+  </div>
+
+</div>

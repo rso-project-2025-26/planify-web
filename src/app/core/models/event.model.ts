@@ -11,14 +11,15 @@ export enum EventType {
 }
 
 export interface Event {
-  id?: number;
+  id?: string;
   title: string;
   description?: string;
   eventDate: string;
   endDate?: string;
-  locationId?: number;
+  locationId?: string;
   locationName?: string;
-  organizerId: number;
+  organizationId: string;
+  organizerId: string;
   maxAttendees?: number;
   currentAttendees: number;
   eventType: EventType;
@@ -32,9 +33,10 @@ export interface CreateEventRequest {
   description?: string;
   eventDate: string;
   endDate?: string;
-  locationId?: number;
+  locationId?: string;
   locationName?: string;
-  organizerId: number;
+  organizationId: string;
+  organizerId: string;
   maxAttendees?: number;
   eventType: EventType;
 }

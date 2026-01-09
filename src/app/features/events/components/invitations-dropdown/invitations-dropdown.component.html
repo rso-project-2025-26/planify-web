@@ -1,0 +1,70 @@
+<div class="invitations-dropdown" *ngIf="isOpen">
+  <!-- Dropdown Header -->
+  <div class="dropdown-header">
+    <h3>
+      <span class="material-icons">mail</span>
+      My Invitations
+    </h3>
+    <button class="btn-close" (click)="onClose()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <app-loading-spinner message="Loading invitations..."></app-loading-spinner>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && pendingInvitations.length === 0">
+    <span class="material-icons">mail_outline</span>
+    <p>No pending invitations</p>
+  </div>
+
+  <!-- Invitations List -->
+  <div class="invitations-list" *ngIf="!loading && pendingInvitations.length > 0">
+    <div 
+      class="invitation-card" 
+      *ngFor="let invitation of pendingInvitations"
+      (click)="viewEvent(invitation)">
+      
+      <!-- Event Info -->
+      <div class="invitation-info">
+        <h4 class="event-title">{{ invitation.event?.title || 'Event' }}</h4>
+        <div class="event-meta">
+          <span class="organization">{{ invitation.organizationName }}</span>
+          <span class="separator">·</span>
+          <span class="date" *ngIf="invitation.event?.eventDate">
+            {{ formatDate(invitation.event?.eventDate) }}
+          </span>
+          <span class="date" *ngIf="!invitation.event?.eventDate">
+            {{ formatDate(invitation.invitationReceivedAt) }}
+          </span>
+        </div>
+        <div class="event-location" *ngIf="invitation.event?.locationName">
+          <span class="material-icons">place</span>
+          <span>{{ invitation.event?.locationName }}</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="invitation-actions">
+        <button 
+          class="btn-accept" 
+          (click)="acceptInvitation(invitation, $event)"
+          title="Accept invitation">
+          <span class="material-icons">check</span>
+        </button>
+        <button 
+          class="btn-decline" 
+          (click)="declineInvitation(invitation, $event)"
+          title="Decline invitation">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop (close on outside click) -->
+<div class="dropdown-backdrop" *ngIf="isOpen" (click)="onClose()"></div>

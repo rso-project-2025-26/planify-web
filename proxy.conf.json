@@ -1,0 +1,56 @@
+{
+    "/api/auth": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/events": {
+        "target": "http://localhost:8081",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/guests": {
+        "target": "http://localhost:8085",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/organizations": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/users": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/invitations": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/notifications": {
+        "target": "http://localhost:8083",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/locations": {
+        "target": "http://localhost:8086",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    },
+    "/api/booking": {
+        "target": "http://localhost:8086",
+        "secure": false,
+        "changeOrigin": true,
+        "logLevel": "debug"
+    }
+}

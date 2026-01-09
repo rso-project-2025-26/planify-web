@@ -1,5 +1,26 @@
 /* Global Styles */
 
+/* Angular Material theme (required for Material components to work properly) */
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// Define a simple light theme using Angular Material palettes
+$planify-primary: mat.define-palette(mat.$indigo-palette);
+$planify-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$planify-warn: mat.define-palette(mat.$red-palette);
+
+$planify-theme: mat.define-light-theme((
+  color: (
+    primary: $planify-primary,
+    accent: $planify-accent,
+    warn: $planify-warn,
+  ),
+));
+
+// Apply theme to all Angular Material components
+@include mat.all-component-themes($planify-theme);
+
 * {
   box-sizing: border-box;
 }
@@ -56,5 +77,75 @@ button {
   background: #94a3b8;
 }
 
-/* Material Theme Overrides */
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Light theme defaults */
+:root {
+  --header-bg: #ffffff;
+  --header-border: #e5e7eb;
+  --header-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  --logo-icon: #3b82f6;
+  --logo-text: #1f2937;
+
+  --nav-link: #6b7280;
+  --nav-link-hover: #3b82f6;
+  --nav-link-active: #3b82f6;
+
+  --btn-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+  --btn-primary-bg: #3b82f6;
+  --btn-primary-hover: #2563eb;
+  --btn-primary-color: #ffffff;
+
+  --btn-secondary-color: #3b82f6;
+  --btn-secondary-border: #3b82f6;
+
+  --btn-create-bg: #10b981;
+  --btn-create-hover: #059669;
+
+  --menu-toggle-color: #1f2937;
+
+  --nav-mobile-bg: #f9fafb;
+  --nav-mobile-border-top: #e5e7eb;
+  --nav-link-mobile: #374151;
+  --nav-link-mobile-hover-bg: #e5e7eb;
+}
+
+/* Dark theme defaults */
+.dark-theme {
+  --header-bg: #1f2937;
+  --header-border: #374151;
+  --header-shadow: 0 2px 4px rgba(0,0,0,0.5);
+
+  --logo-icon: #3b82f6;
+  --logo-text: #f9fafb;
+
+  --nav-link: #d1d5db;
+  --nav-link-hover: #ffffff;
+  --nav-link-active: #ffffff;
+
+  --btn-shadow: 0 4px 6px rgba(0,0,0,0.3);
+
+  --btn-primary-bg: #3b82f6;
+  --btn-primary-hover: #2563eb;
+  --btn-primary-color: #ffffff;
+
+  --btn-secondary-color: #3b82f6;
+  --btn-secondary-border: #3b82f6;
+
+  --btn-create-bg: #da6613;
+  --btn-create-hover: #ce5818;
+
+  --menu-toggle-color: #f9fafb;
+
+  --nav-mobile-bg: #111827;
+  --nav-mobile-border-top: #374151;
+  --nav-link-mobile: #d1d5db;
+  --nav-link-mobile-hover-bg: #374151;
+}
+
+*,
+*::before,
+*::after {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}

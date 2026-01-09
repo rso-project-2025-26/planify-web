@@ -1,0 +1,299 @@
+<div class="event-detail-container">
+  <!-- Loading -->
+  <app-loading-spinner *ngIf="loading" message="Loading event..."></app-loading-spinner>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="error-message">
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="goBack()">Back to Events</button>
+  </div>
+
+  <!-- Event Details -->
+  <div *ngIf="event && !loading" class="event-detail">
+    <!-- Header -->
+    <div class="detail-header">
+      <button class="btn-back" (click)="goBack()">
+        <span class="material-icons">arrow_back</span>
+        Back
+      </button>
+
+      <div class="header-actions" *ngIf="canEdit">
+        <!-- Edit -->
+        <span class="action-item" (click)="editEvent()">
+          <span class="material-icons">edit</span>
+          Edit
+        </span>
+
+        <!-- Delete -->
+        <span class="action-item delete" (click)="deleteEvent()">
+          <span class="material-icons">delete</span>
+          Delete
+        </span>
+
+        <!-- Publish -->
+        <span class="action-item publish" (click)="publishEvent()" *ngIf="event.status === 'DRAFT'">
+          <span class="material-icons">rocket_launch</span>
+          Publish
+        </span>
+
+        <!-- Cancel Event -->
+        <span class="action-item delete" (click)="cancelEvent()" *ngIf="event.status === 'PUBLISHED'">
+          <span class="material-icons">cancel</span>
+          Cancel Event
+        </span>
+      </div>
+    </div>
+
+    <!-- Event Info -->
+    <div class="event-info-card">
+      <div class="event-header">
+        <h1>{{ event.title }}</h1>
+        <div class="header-badges">
+          <span class="status-badge" [ngClass]="{
+            'badge-draft': event.status === 'DRAFT',
+            'badge-published': event.status === 'PUBLISHED',
+            'badge-cancelled': event.status === 'CANCELLED',
+            'badge-completed': event.status === 'COMPLETED'
+          }">
+            {{ event.status }}
+          </span>
+          <span class="type-badge" [ngClass]="{
+            'badge-public': event.eventType === 'PUBLIC',
+            'badge-private': event.eventType === 'PRIVATE'
+          }">
+            {{ event.eventType }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Organization Info -->
+      <div class="organization-info" *ngIf="organization">
+        <span class="material-icons">business</span>
+        <div class="org-details">
+          <span class="org-name">{{ organization.name }}</span>
+          <span class="org-slug">{{ organization.slug }}</span>
+        </div>
+      </div>
+
+      <div class="event-meta">
+        <!-- Event Date -->
+        <div class="meta-item">
+          <span class="material-icons">event</span>
+          <span>{{ formatDate(event.eventDate) }}</span>
+        </div>
+
+        <!-- Location -->
+        <div class="meta-item" *ngIf="event.locationName">
+          <span class="material-icons">place</span>
+          <span>{{ event.locationName }}</span>
+        </div>
+
+        <!-- Attendees -->
+        <div class="meta-item">
+          <span class="material-icons">people</span>
+          <span>
+            {{ event.currentAttendees }}
+            {{ event.maxAttendees ? '/ ' + event.maxAttendees : '' }}
+            attendees
+          </span>
+        </div>
+      </div>
+
+      <div class="event-description" *ngIf="event.description">
+        <h2>About This Event</h2>
+        <p>{{ event.description }}</p>
+      </div>
+    </div>
+
+    <!-- RSVP Section for Guests -->
+    <div class="rsvp-card" *ngIf="isGuest && myInvitation && !canEdit">
+      <div class="rsvp-main">
+        <div class="rsvp-left">
+          <div class="rsvp-header">
+            <h2>You're Invited!</h2>
+            <span class="rsvp-status" [ngClass]="getStatusClass(myInvitation.rsvpStatus)">
+              {{ myInvitation.rsvpStatus }}
+            </span>
+          </div>
+          <p class="rsvp-message">
+            Invited by {{ organization?.name || 'the organizer' }} • {{ formatInviteDate(myInvitation.invitationReceivedAt) }}
+          </p>
+          <div class="rsvp-responded" *ngIf="myInvitation.rsvpStatus !== 'PENDING' && myInvitation.respondedAt">
+            <span class="material-icons">check_circle</span>
+            Responded {{ formatInviteDate(myInvitation.respondedAt) }}
+          </div>
+        </div>
+        
+        <div class="rsvp-actions" *ngIf="myInvitation.rsvpStatus === 'PENDING'">
+          <button class="btn-accept" (click)="acceptInvitation()">
+            <span class="material-icons">check</span>
+            Accept
+          </button>
+          <button class="btn-decline" (click)="declineInvitation()">
+            <span class="material-icons">close</span>
+            Decline
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guest List -->
+    <div class="guests-card" *ngIf="canEdit">
+      <div class="guests-header">
+        <h2>
+          Guest List
+          <ng-container *ngIf="event?.status !== 'DRAFT'">
+            ({{ guests.length }})
+          </ng-container>
+        </h2>
+        <button 
+          class="btn-invite" 
+          (click)="toggleInviteForm()" 
+          *ngIf="canEdit && event?.status === 'PUBLISHED'"
+          [disabled]="loadingGuests">
+          <span class="material-icons">person_add</span>
+          Invite Guest
+        </button>
+      </div>
+
+      <div class="draft-warning" *ngIf="canEdit && event?.status === 'DRAFT'">
+        <span class="material-icons">info</span>
+        <div class="warning-content">
+          <strong>Event is in draft mode</strong>
+          <p>You must publish this event before inviting guests. Click "Publish" above to make it visible and start inviting attendees.</p>
+        </div>
+      </div>
+
+      <!-- Invite Form -->
+      <div class="invite-section" *ngIf="showInviteForm && canEdit && event?.status === 'PUBLISHED'">
+
+        <!-- Tab buttons -->
+        <div class="invite-tabs">
+          <button 
+            class="tab-button"
+            [class.active]="!showUserSearch"
+            (click)="showUserSearch = false">
+            <span class="material-icons">groups</span>
+            From Organization
+          </button>
+          <button 
+            class="tab-button"
+            [class.active]="showUserSearch"
+            (click)="toggleUserSearch()">
+            <span class="material-icons">search</span>
+            Search Users
+          </button>
+        </div>
+
+        <!-- Organization members dropdown -->
+        <div class="invite-form" *ngIf="!showUserSearch">
+          <h3>Invite from Organization Members</h3>
+          <div class="form-group">
+            <label for="userId">Select Member</label>
+            <select 
+              id="userId" 
+              [(ngModel)]="selectedUserId" 
+              class="form-control"
+              [disabled]="inviting">
+              <option value="">Select a member</option>
+              <option *ngFor="let member of getAvailableMembers()" [value]="member.userId">
+                {{ member.firstName }} {{ member.lastName }} (&#64;{{ member.username }})
+              </option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button class="btn-secondary" (click)="toggleInviteForm()" [disabled]="inviting">
+              Cancel
+            </button>
+            <button 
+              class="btn-primary" 
+              (click)="inviteGuest()" 
+              [disabled]="!selectedUserId || inviting">
+              {{ inviting ? 'Inviting...' : 'Send Invitation' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- User search -->
+        <div class="user-search-form" *ngIf="showUserSearch">
+          <h3>Search for Users</h3>
+          <div class="search-box">
+            <span class="material-icons search-icon">search</span>
+            <input 
+              type="text"
+              class="search-input"
+              placeholder="Search by username or name..."
+              [(ngModel)]="userSearchQuery"
+              (input)="onUserSearchInput($any($event.target).value)"
+              [disabled]="inviting"
+            />
+            <span class="material-icons loading-icon" *ngIf="searchingUsers">refresh</span>
+          </div>
+          
+          <div class="search-results" *ngIf="userSearchResults.length > 0">
+            <div 
+              class="search-result-item" 
+              *ngFor="let user of userSearchResults"
+              (click)="inviteSearchedUser(user)">
+              <div class="user-info">
+                <span class="material-icons">person</span>
+                <div class="user-details">
+                  <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+                  <small>&#64;{{ user.username }}</small>
+                </div>
+              </div>
+              <button class="btn-add" [disabled]="inviting">
+                <span class="material-icons">add</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="no-results" *ngIf="userSearchQuery && !searchingUsers && userSearchResults.length === 0">
+            <span class="material-icons">search_off</span>
+            <p>No users found</p>
+          </div>
+          
+          <div class="search-hint" *ngIf="!userSearchQuery">
+            <span class="material-icons">info</span>
+            <p>Start typing to search for users by username or name</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Loading Guests -->
+      <app-loading-spinner *ngIf="loadingGuests" message="Loading guests..."></app-loading-spinner>
+
+      <!-- Guest List -->
+      <div class="guests-list" *ngIf="!loadingGuests && guests.length > 0">
+        <div class="guest-item" *ngFor="let guest of guests">
+          <div class="guest-info">
+            <span class="material-icons">person</span>
+            <div class="guest-details">
+              <span class="guest-name">{{ getGuestDisplayName(guest) }}</span>
+              <span class="guest-invited">{{ getGuestSubtitle(guest) }}</span>
+              <span class="guest-invited">Invited {{ formatDate(guest.invitedAt) }}</span>
+            </div>
+          </div>
+          <div class="guest-actions">
+            <span class="rsvp-badge" [ngClass]="getStatusClass(getGuestStatus(guest.userId))">
+              {{ getGuestStatus(guest.userId) }}
+            </span>
+            <button 
+              class="btn-remove" 
+              (click)="removeGuest(guest.userId)"
+              title="Remove guest">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Guests -->
+      <div class="no-guests" *ngIf="event.status !== 'DRAFT' && !loadingGuests && guests.length === 0">
+        <span class="material-icons">people_outline</span>
+        <p>No guests invited yet</p>
+      </div>
+    </div>
+  </div>
+</div>

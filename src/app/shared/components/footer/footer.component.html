@@ -17,7 +17,8 @@
         <ul class="footer-links">
           <li><a href="/dashboard" class="footer-link">Dashboard</a></li>
           <li><a href="/events" class="footer-link">Events</a></li>
-          <li><a href="/organization" class="footer-link">Organization</a></li>
+          <li><a href="/organizations/my" *ngIf="(auth.hasAnyRole(['uporabnik']) | async) === true" class="footer-link">My Organizations</a></li>
+          <li><a href="/organizations/admin" *ngIf="(auth.hasAnyRole(['org_admin']) | async) === true" class="footer-link">Organization Memberships</a></li>
         </ul>
       </div>
 
