@@ -5,10 +5,10 @@ export const environment = {
     userServiceUrl: "/api",
     guestServiceUrl: "/api",
     notificationServiceUrl: "/api",
-    notificationWebSocketUrl: "wss://PROD_IP.nip.io/ws/notifications",
+    notificationWebSocketUrl: "wss://131.189.78.13.nip.io/ws/notifications",
     enableWebSocketNotifications: true,
-    
-    keycloakUrl: "http://PROD_IP.nip.io/keycloak",
+
+    keycloakUrl: "https://131.189.78.13.nip.io/keycloak",
     keycloakRealm: "planify",
     keycloakClientId: "planify-frontend",
     
