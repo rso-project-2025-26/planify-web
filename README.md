@@ -163,8 +163,8 @@ Keycloak must be configured with:
 - **Realm**: `planify`
 - **Client ID**: `planify-frontend`
 - **Client Type**: Public
-- **Valid Redirect URIs**: `http://localhost:4200/*`, `https://<IP>/*`
-- **Web Origins**: `http://localhost:4200`, `https://<IP>`
+- **Valid Redirect URIs**: `http://localhost:4200/*`, `https://[IP]/*`
+- **Web Origins**: `http://localhost:4200`, `https://<[IP]`
 
 Keycloak configuration is defined in `src/app/core/config/keycloak.config.ts`.
 
